@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Reactor Game</title>
+    <style>
+        body {
+
+            overflow: hidden;
+            /* hide scrollbars */
+            color: bisque;
+            background-color: #000;
+            /* padding: 0px;
+            border: 0px;
+            margin: 0px; */
+        }
+
+        div.fixed {
+            position: fixed;
+            top: 10;
+            right: 0;
+            width: 300px;
+            border: 3px solid #73AD21;
+            z-index: 4;
+        }
+
+        #debugInfo {
+            position: fixed;
+            top: 10;
+            right: 0;
+            /* width: 300px; */
+            border: 2px solid #73AD21;
+            z-index: 4;
+            padding: 0px;
+            color: azure;
+        }
+
+        #myCanvas {
+            padding: 0px;
+            border: 0px;
+            margin: 0px;
+            z-index: 1;
+            position: fixed;
+            top: 0;
+            right: 0;
+            /* background-color: black; */
+        }
+
+        #trendCanvas {
+            padding: 0px;
+            margin: 0px;
+            border: 1px solid #EEE;
+            z-index: 1;
+            /* position: fixed; */
+            top: 0;
+            right: 0;
+            /* background-color: black; */
+        }
+
+        .slidecontainer {
+            width: 100%;
+            /* Width of the outside container */
+        }
+
+        /* The slider itself */
+        .slider {
+            -webkit-appearance: none;
+            /* Override default CSS styles */
+            appearance: none;
+            width: 100%;
+            /* Full-width */
+            height: 25px;
+            /* Specified height */
+            background: #d3d3d3;
+            /* Grey background */
+            outline: none;
+            /* Remove outline */
+            opacity: 0.6;
+            /* Set transparency (for mouse-over effects on hover) */
+            -webkit-transition: .2s;
+            /* 0.2 seconds transition on hover */
+            transition: opacity .2s;
+        }
+
+        /* Mouse-over effects */
+        .slider:hover {
+            opacity: 0.8;
+            /* Fully shown on mouse-over */
+        }
+
+
+        .sliderDisplay {
+            position: relative;
+            z-index: -1;
+            top:25px;
+            left:15px;
+            width: 100px;
+            overflow: hidden;
+        } 
+       
+
+        /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            /* Override default look */
+            appearance: none;
+            width: 25px;
+            /* Set a specific slider handle width */
+            height: 25px;
+            /* Slider handle height */
+            background: #4CAF50;
+            /* Green background */
+            cursor: pointer;
+            /* Cursor on hover */
+        }
+
+        .modal {
+            color: black;
+            position: fixed;
+            margin: 10px;
+            padding: 10px;
+            top: 10%;
+            left: 10%;
+            opacity: 0.95;
+            width: auto;
+            max-width: 60%;
+            height: auto;
+            background: #DDD;
+            z-index: 3;
+            border: 3px solid #73AD21;
+        }
+
+        /* Tooltip container */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted black;
+            /* If you want dots under the hoverable text */
+        }
+
+        /* Tooltip text */
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 6px;
+
+            /* Position the tooltip text */
+            position: absolute;
+            z-index: 1;
+            bottom: 90%;
+            left: 50%;
+            margin-left: -60px;
+
+            /* Fade in tooltip */
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Tooltip arrow */
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+
+        /* Show the tooltip text when you mouse over the tooltip container */
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .card {
+            /* Add shadows to create the "card" effect */
+            float: left;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            width: 100px;
+            margin: 10px;
+            background-color: #EEE;
+            font-size: smaller;
+        }
+
+        .card img {
+            border-radius: 5px;
+            /* 5px rounded corners */
+
+        }
+
+        /* On mouse-over, add a deeper shadow */
+        .card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        /* Add some padding inside the card container */
+        .container {
+            padding: 2px 8px;
+        }
+
+        .footer {
+            float: inline-end;
+        }
+    </style>
+</head>
+
+<body onload="initializeSim()">
+
+    <div id="gameOver" class="modal" hidden>
+        <h1>Game Over</h1>
+        <span id="deathReason" data-value="0"> a bug in the game </span>
+        <hr>
+        <div style="float:right">
+        
+            <input type="button" value="Try Again" onclick="reset();">
+        </div>
+
+    </div>
+
+    <div id="help" class="modal">
+        <div style="float:right">
+            <input type="button" value="X" onclick="hideModals();">
+        </div>
+        <h1>RBMKrazy: a game of crossed sections</h1>
+        <ul>
+            <li>Stack element blocks to build your reactor. </li>
+            <li>Monitor the guages and trendplot to keep the reactor under control. </li>
+            <li>Adjust the Main Coolent Pump (MCP) Speed to control power output and core tempreture. </li>
+            <li>Make money by producing power and medical isotopes. </li>
+            <li>Beware of NRC emissions limits, earthquakes, and of course, meltdowns.</li>
+        </ul>
+           
+        </p>
+
+        <div class="footer" style="font-size:x-small">
+            <p id="note1">[1] This simuation is not very accurate, for a more realistic simuation see
+                <a href="https://github.com/mit-crpg/OpenMOC">OpenMoc</a>
+            </p>
+        </div>
+
+        <hr>
+        <div class="elemetCards">
+
+            <div class="card">
+                <img src="/img/Be.png" alt="Beryllium " style="width:100%">
+                <div class="container">
+                    <h4><b>Beryllium</b> Reflector</h4>
+                    <p>Used to reflect neutrons back into the core.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="/img/C.png" alt="Carbon " style="width:100%">
+                <div class="container">
+                    <h4><b>Carbon</b> Moderator</h4>
+                    <p>Used to slow down neutrons and to increase the chance of fission.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="/img/U.png" alt="Uranium " style="width:100%">
+                <div class="container">
+                    <h4><b>Uranium</b> Fuel</h4>
+                    <p>Emits decay neutrons at random intervals. Will fission and emit 2-3 neutrons when hit by neutron.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <img src="/img/B.png" alt="Boron " style="width:100%">
+                <div class="container">
+                    <h4><b>Boron</b> Poison</h4>
+                    <p>Adsorbs neutrons. Used to keep the reaction under control and prevent off-site radation.</p>
+                </div>
+            </div>
+        </div>
+        <div style="clear:both;"></div>
+
+        <hr>
+        <div style="float:left"> 
+             <a href="https://github.com/darrell-rg/RBMKrazy">github.com/darrell-rg/RBMKrazy</a>
+            
+            </div>
+        <div style="float:right">
+            Select Level:
+            <select id="levelSelect">
+                <option value="Criticality">Criticality</option>
+                <option value="MOAR PWR">MOAR PWR</option>
+                <option value="Earthquake">Earthquake</option>
+            </select>
+
+            <input type="button" value="Reset/Start Level" onclick="reset();">
+        </div>
+
+
+    </div>
+
+    <canvas id="myCanvas" width="800" height="700"></canvas>
+    <div id="debugInfo">
+
+        <input type="button" value="Help" onclick="showHelp();">
+        <input type="button" value="Reset" onclick="reset();">
+        <!-- Debug Info:
+        <div id="neutron_count">test debug info</div>
+        <div id="mean_fuel_temp">test debug info</div> -->
+
+        <div id="worth">test debug info</div>
+        <div id="perf"></div>
+
+        <span id="neutron_countGaugeContainer" data-value="0" class="tooltip">
+            <span class="tooltiptext">Watch this trend to avoid going supercritical!</span>
+        </span>
+        <span id="neutron_speedGaugeContainer" data-value="0" class="tooltip">
+            <span class="tooltiptext">Slow neutrons increase the chance of fission</span>
+        </span>
+        <span id="radGaugeContainer" data-value="0" class="tooltip">     
+            <span class="tooltiptext">Radation emited offsite</span>
+       </span>
+        <div></div>
+        <span id="powerGaugeContainer" data-value="0"  class="tooltip">
+
+        </span>
+    </span>
+        <span id="meanFuelTempGaugeContainer" data-value="0" class="tooltip">
+            <span class="tooltiptext">Avg tempreture of fuel elements</span>
+        </span>
+        <span id="maxFuelTempGaugeContainer" data-value="0" class="tooltip">
+            <span class="tooltiptext">Max tempreture of fuel elements</span> 
+        </span>
+        <div id="thermo"></div>
+        <canvas id="trendCanvas" width="250" height="250"></canvas>
+        <div class="slidecontainer">
+            <span class='sliderDisplay'  id="mcp_display">MCP Speed: 50</span>
+            <input type="range" min="1" max="100" value="50" class="slider" id="mcp_speed">
+
+        </span>
+        </div>
+    </div>
+    <h1>Game Paused</h1>
+    <canvas id="tempCanvas" width="100" height="100"></canvas>
+
+    <ol id="fuelList"></ol>
+    <script src="vendor/d3.v5.min.js" charset="utf-8"></script>
+    <script src="vendor/math.min.js" charset="utf-8"></script>
+    <script src="vendor/matter.js" charset="utf-8"></script>
+    <script src="guages.js" charset="utf-8"></script>
+    <!-- <script src="thermo.js" charset="utf-8"></script> -->
+    <script src="reactorMatterSim.js" charset="utf-8"></script>
+    <script>
+        var gauges = [];
+        var trendPlot = null;
+
+        var mcp_slider = document.getElementById("mcp_speed");
+        // Update the current slider value (each time you drag the slider handle)
+        mcp_slider.oninput = function () {
+            var output = document.getElementById("mcp_display");
+            output.innerHTML = "MCP Speed: " +  this.value;
+        }
+
+
+        function hideModals() {
+            var modals = document.querySelectorAll(".modal");
+
+            modals.forEach(function (m) {
+                m.hidden = true;
+            });
+            startSim();
+        }
+
+
+        function showHelp() {
+            stopSim();
+            document.getElementById("help").hidden = false;            
+        }
+
+
+        function showGameOver(reason) {
+            stopSim();
+            document.getElementById("deathReason").innerHTML = reason;
+            document.getElementById("gameOver").hidden = false;
+        }
+
+        function reset()
+        {
+            initStacks();
+            hideModals(); 
+        }
+
+        function initializeSim() {
+            //startup the guages
+            createGauges();
+            setInterval(updateGauges, 250);
+            initStacks();
+            trendPlot = new TrendPlot(trendContext, {});
+        }
+
+        function updateGauges() {
+            trendPlot.clearTrend();
+            for (var key in gauges) {
+                var con = document.getElementById(key + "GaugeContainer");
+                gauges[key].redraw(con.dataset.value);
+                var label = gauges[key].config.label;
+                var value = scaleValue(gauges[key], con.dataset.value);
+                var c = gauges[key].config.trendColor;
+                trendPlot.plotTrend(value, label, c);
+            }
+
+        }
+
+        function scaleValue(gauge, rawValue) {
+            var overflow = 0; //10;\
+            var scaleValue = (rawValue - gauge.config.min) / gauge.config.max;
+            if (scaleValue < 0)
+                scaleValue = 0;
+            if (scaleValue > 1)
+                scaleValue = 1;
+
+            return scaleValue;
+        }
+
+
+        function createGauges() {
+            createGauge("neutron_count", "N Flux", 0, MAX_DRAWN_NEUTRONS, "rgba(  0,   0, 255, 1 )");
+            createGauge("neutron_speed", "N Speed", 0, NEUTRON_INITIAL_V, "rgba(  0,  123, 255, 1 )");
+            createGauge("meanFuelTemp", "Mean Temp", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
+            createGauge("maxFuelTemp", "Max Temp", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
+            createGauge("rad", "Rads", 0, 50, "rgba(255,   0,   240, 1 )");
+            createGauge("power", "Power", 0, 500, "rgba(1,   240,  1, 1 )");
+            //createGauge("worth", "Worth", 0.99, 1.01);
+            //createGauge("test", "Test", -50, 50 );
+        }
+
+        function createGauge(name, label, min, max, trendColor) {
+            var config =
+            {
+                size: 100,
+                label: label,
+                min: undefined != min ? min : 0,
+                max: undefined != max ? max : 100,
+                minorTicks: 5
+            }
+
+            var range = config.max - config.min;
+            config.yellowZones = [{ from: config.min + range * 0.75, to: config.min + range * 0.9 }];
+            config.redZones = [{ from: config.min + range * 0.9, to: config.max }];
+            config.trendColor = trendColor;
+            gauges[name] = new Gauge(name + "GaugeContainer", config);
+            gauges[name].render();
+        }
+
+    </script>
+</body>
+
+</html>
