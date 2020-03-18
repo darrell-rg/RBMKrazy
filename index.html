@@ -6,16 +6,12 @@
     <title>Reactor Game</title>
     <style>
         body {
-
             overflow: hidden;
             /* hide scrollbars */
             color: bisque;
             background-color: #000;
-            /* padding: 0px;
-            border: 0px;
-            margin: 0px; */
+            font-family: sans-serif;
         }
-
         div.fixed {
             position: fixed;
             top: 10;
@@ -24,7 +20,6 @@
             border: 3px solid #73AD21;
             z-index: 4;
         }
-
         #debugInfo {
             position: fixed;
             top: 10;
@@ -35,8 +30,7 @@
             padding: 0px;
             color: azure;
         }
-
-        #myCanvas {
+        #gameCanvas {
             padding: 0px;
             border: 0px;
             margin: 0px;
@@ -46,21 +40,14 @@
             right: 0;
             /* background-color: black; */
         }
-
         #trendCanvas {
             padding: 0px;
             margin: 0px;
             border: 1px solid #EEE;
             z-index: 1;
-            /* position: fixed; */
             top: 0;
             right: 0;
             /* background-color: black; */
-        }
-
-        .slidecontainer {
-            width: 100%;
-            /* Width of the outside container */
         }
 
         /* The slider itself */
@@ -82,24 +69,23 @@
             /* 0.2 seconds transition on hover */
             transition: opacity .2s;
         }
-
+        .slidecontainer {
+            width: 100%;
+            /* Width of the outside container */
+        }
         /* Mouse-over effects */
         .slider:hover {
             opacity: 0.8;
             /* Fully shown on mouse-over */
         }
-
-
         .sliderDisplay {
             position: relative;
             z-index: -1;
-            top:25px;
-            left:15px;
+            top: 25px;
+            left: 15px;
             width: 100px;
             overflow: hidden;
-        } 
-       
-
+        }
         /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -138,7 +124,6 @@
             border-bottom: 1px dotted black;
             /* If you want dots under the hoverable text */
         }
-
         /* Tooltip text */
         .tooltip .tooltiptext {
             visibility: hidden;
@@ -148,19 +133,16 @@
             text-align: center;
             padding: 5px 0;
             border-radius: 6px;
-
             /* Position the tooltip text */
             position: absolute;
             z-index: 1;
             bottom: 90%;
             left: 50%;
             margin-left: -60px;
-
             /* Fade in tooltip */
             opacity: 0;
             transition: opacity 0.3s;
         }
-
         /* Tooltip arrow */
         .tooltip .tooltiptext::after {
             content: "";
@@ -172,7 +154,6 @@
             border-style: solid;
             border-color: #555 transparent transparent transparent;
         }
-
         /* Show the tooltip text when you mouse over the tooltip container */
         .tooltip:hover .tooltiptext {
             visibility: visible;
@@ -184,25 +165,23 @@
             float: left;
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
             transition: 0.3s;
-            width: 100px;
+            width: 15%;
             margin: 10px;
             background-color: #EEE;
             font-size: smaller;
         }
-
+        .card h4 {
+            margin: 5px;
+        }
         .card img {
             border-radius: 5px;
-            /* 5px rounded corners */
-
         }
-
         /* On mouse-over, add a deeper shadow */
         .card:hover {
             box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
         }
-
         /* Add some padding inside the card container */
-        .container {
+        .card .container {
             padding: 2px 8px;
         }
 
@@ -219,7 +198,6 @@
         <span id="deathReason" data-value="0"> a bug in the game </span>
         <hr>
         <div style="float:right">
-        
             <input type="button" value="Try Again" onclick="reset();">
         </div>
 
@@ -229,7 +207,7 @@
         <div style="float:right">
             <input type="button" value="X" onclick="hideModals();">
         </div>
-        <h1>RBMKrazy: a game of crossed sections</h1>
+        <h1 style="margin: 0px;">RBMKrazy: a game of crossed sections</h1>
         <ul>
             <li>Stack element blocks to build your reactor. </li>
             <li>Monitor the guages and trendplot to keep the reactor under control. </li>
@@ -237,11 +215,11 @@
             <li>Make money by producing power and medical isotopes. </li>
             <li>Beware of NRC emissions limits, earthquakes, and of course, meltdowns.</li>
         </ul>
-           
+
         </p>
 
         <div class="footer" style="font-size:x-small">
-            <p id="note1">[1] This simuation is not very accurate, for a more realistic simuation see
+            <p id="note1">[1] This reactor simuation is not very accurate, for a more realistic simuation see
                 <a href="https://github.com/mit-crpg/OpenMOC">OpenMoc</a>
             </p>
         </div>
@@ -250,9 +228,17 @@
         <div class="elemetCards">
 
             <div class="card">
+                <img src="img/B.svg" alt="Boron " style="width:100%">
+                <div class="container">
+                    <h4>Poison</h4>
+                    <p>Absorbs neutrons. Used to keep the reaction under control and prevent off-site radation.</p>
+                </div>
+            </div>
+
+            <div class="card">
                 <img src="img/Be.svg" alt="Beryllium " style="width:100%">
                 <div class="container">
-                    <h4><b>Beryllium</b> Reflector</h4>
+                    <h4>Reflector</h4>
                     <p>Used to reflect neutrons back into the core.</p>
                 </div>
             </div>
@@ -260,7 +246,7 @@
             <div class="card">
                 <img src="img/C.svg" alt="Carbon " style="width:100%">
                 <div class="container">
-                    <h4><b>Carbon</b> Moderator</h4>
+                    <h4>Moderator</h4>
                     <p>Used to slow down neutrons and to increase the chance of fission.</p>
                 </div>
             </div>
@@ -268,27 +254,19 @@
             <div class="card">
                 <img src="img/U.svg" alt="Uranium " style="width:100%">
                 <div class="container">
-                    <h4><b>Uranium</b> Fuel</h4>
+                    <h4>Fuel</h4>
                     <p>Emits decay neutrons at random intervals. Will fission and emit 2-3 neutrons when hit by neutron.
                     </p>
-                </div>
-            </div>
-
-            <div class="card">
-                <img src="img/B.svg" alt="Boron " style="width:100%">
-                <div class="container">
-                    <h4><b>Boron</b> Poison</h4>
-                    <p>Adsorbs neutrons. Used to keep the reaction under control and prevent off-site radation.</p>
                 </div>
             </div>
         </div>
         <div style="clear:both;"></div>
 
         <hr>
-        <div style="float:left"> 
-             <a href="https://github.com/darrell-rg/RBMKrazy">github.com/darrell-rg/RBMKrazy</a>
-            
-            </div>
+        <div style="float:left">
+            <a href="https://github.com/darrell-rg/RBMKrazy">github.com/darrell-rg/RBMKrazy</a>
+
+        </div>
         <div style="float:right">
             Select Level:
             <select id="levelSelect">
@@ -303,7 +281,7 @@
 
     </div>
 
-    <canvas id="myCanvas" width="800" height="700"></canvas>
+    <canvas id="gameCanvas" width="800" height="700"></canvas>
     <div id="debugInfo">
 
         <input type="button" value="Help" onclick="showHelp();">
@@ -321,27 +299,27 @@
         <span id="neutron_speedGaugeContainer" data-value="0" class="tooltip">
             <span class="tooltiptext">Slow neutrons increase the chance of fission</span>
         </span>
-        <span id="radGaugeContainer" data-value="0" class="tooltip">     
+        <span id="radGaugeContainer" data-value="0" class="tooltip">
             <span class="tooltiptext">Radation emited offsite</span>
-       </span>
+        </span>
         <div></div>
-        <span id="powerGaugeContainer" data-value="0"  class="tooltip">
+        <span id="powerGaugeContainer" data-value="0" class="tooltip">
 
         </span>
-    </span>
+        </span>
         <span id="meanFuelTempGaugeContainer" data-value="0" class="tooltip">
             <span class="tooltiptext">Avg tempreture of fuel elements</span>
         </span>
         <span id="maxFuelTempGaugeContainer" data-value="0" class="tooltip">
-            <span class="tooltiptext">Max tempreture of fuel elements</span> 
+            <span class="tooltiptext">Max tempreture of fuel elements</span>
         </span>
         <div id="thermo"></div>
         <canvas id="trendCanvas" width="250" height="250"></canvas>
         <div class="slidecontainer">
-            <span class='sliderDisplay'  id="mcp_display">MCP Speed: 50</span>
+            <span class='sliderDisplay' id="mcp_display">MCP Speed: 50</span>
             <input type="range" min="1" max="100" value="50" class="slider" id="mcp_speed">
 
-        </span>
+            </span>
         </div>
     </div>
     <h1>Game Paused</h1>
@@ -361,7 +339,7 @@
         // Update the current slider value (each time you drag the slider handle)
         mcp_slider.oninput = function () {
             var output = document.getElementById("mcp_display");
-            output.innerHTML = "MCP Speed: " +  this.value;
+            output.innerHTML = "MCP Speed: " + this.value;
         }
 
 
@@ -377,7 +355,7 @@
 
         function showHelp() {
             stopSim();
-            document.getElementById("help").hidden = false;            
+            document.getElementById("help").hidden = false;
         }
 
 
@@ -387,10 +365,9 @@
             document.getElementById("gameOver").hidden = false;
         }
 
-        function reset()
-        {
+        function reset() {
             initStacks();
-            hideModals(); 
+            hideModals();
         }
 
         function initializeSim() {

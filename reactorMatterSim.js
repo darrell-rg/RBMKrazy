@@ -3,7 +3,7 @@ This is the main code for the simulation and rendering
 
 */
 "use strict";
-let canvas = document.getElementById("myCanvas");
+let canvas = document.getElementById("gameCanvas");
 let context = canvas.getContext("2d");
 let HEIGHT = context.canvas.clientHeight;
 let WIDTH = context.canvas.clientWidth;
