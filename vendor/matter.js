@@ -2175,6 +2175,7 @@ var Bounds = _dereq_('../geometry/Bounds');
                             }
 
                             // narrow phase
+                            // FIXME: sometimes partB is undefined?  
                             var collision = SAT.collides(partA, partB, previousCollision);
 
 

@@ -6,7 +6,7 @@ This is the main code for drawing of guages
 function Gauge(placeholderName, configuration) {
 	this.placeholderName = placeholderName;
 
-	var self = this; // for internal d3 functions
+	let self = this; // for internal d3 functions
 
 	this.configure = function (configuration) {
 		this.config = configuration;
@@ -57,20 +57,20 @@ function Gauge(placeholderName, configuration) {
 			.style("stroke", "#e0e0e0")
 			.style("stroke-width", "2px");
 
-		for (var index in this.config.greenZones) {
+		for (let index in this.config.greenZones) {
 			this.drawBand(this.config.greenZones[index].from, this.config.greenZones[index].to, self.config.greenColor);
 		}
 
-		for (var index in this.config.yellowZones) {
+		for (let index in this.config.yellowZones) {
 			this.drawBand(this.config.yellowZones[index].from, this.config.yellowZones[index].to, self.config.yellowColor);
 		}
 
-		for (var index in this.config.redZones) {
+		for (let index in this.config.redZones) {
 			this.drawBand(this.config.redZones[index].from, this.config.redZones[index].to, self.config.redColor);
 		}
 
 		if (undefined != this.config.label) {
-			var fontSize = Math.round(this.config.size / 9);
+			let fontSize = Math.round(this.config.size / 9);
 			this.body.append("svg:text")
 				.attr("x", this.config.cx)
 				.attr("y", this.config.cy / 2 + fontSize / 2)
@@ -82,13 +82,13 @@ function Gauge(placeholderName, configuration) {
 				.style("stroke-width", "0px");
 		}
 
-		var fontSize = Math.round(this.config.size / 16);
-		var majorDelta = this.config.range / (this.config.majorTicks - 1);
-		for (var major = this.config.min; major <= this.config.max; major += majorDelta) {
-			var minorDelta = majorDelta / this.config.minorTicks;
-			for (var minor = major + minorDelta; minor < Math.min(major + majorDelta, this.config.max); minor += minorDelta) {
-				var point1 = this.valueToPoint(minor, 0.75);
-				var point2 = this.valueToPoint(minor, 0.85);
+		let fontSize = Math.round(this.config.size / 16);
+		let majorDelta = this.config.range / (this.config.majorTicks - 1);
+		for (let major = this.config.min; major <= this.config.max; major += majorDelta) {
+			let minorDelta = majorDelta / this.config.minorTicks;
+			for (let minor = major + minorDelta; minor < Math.min(major + majorDelta, this.config.max); minor += minorDelta) {
+				let point1 = this.valueToPoint(minor, 0.75);
+				let point2 = this.valueToPoint(minor, 0.85);
 
 				this.body.append("svg:line")
 					.attr("x1", point1.x)
@@ -99,8 +99,8 @@ function Gauge(placeholderName, configuration) {
 					.style("stroke-width", "1px");
 			}
 
-			var point1 = this.valueToPoint(major, 0.7);
-			var point2 = this.valueToPoint(major, 0.85);
+			let point1 = this.valueToPoint(major, 0.7);
+			let point2 = this.valueToPoint(major, 0.85);
 
 			this.body.append("svg:line")
 				.attr("x1", point1.x)
@@ -111,7 +111,7 @@ function Gauge(placeholderName, configuration) {
 				.style("stroke-width", "2px");
 
 			if (major == this.config.min || major == this.config.max) {
-				var point = this.valueToPoint(major, 0.63);
+				let point = this.valueToPoint(major, 0.63);
 
 				this.body.append("svg:text")
 					.attr("x", point.x)
@@ -125,13 +125,13 @@ function Gauge(placeholderName, configuration) {
 			}
 		}
 
-		var pointerContainer = this.body.append("svg:g").attr("class", "pointerContainer");
+		let pointerContainer = this.body.append("svg:g").attr("class", "pointerContainer");
 
-		var midValue = (this.config.min + this.config.max) / 2;
+		let midValue = (this.config.min + this.config.max) / 2;
 
-		var pointerPath = this.buildPointerPath(midValue);
+		let pointerPath = this.buildPointerPath(midValue);
 
-		var pointerLine = d3.line()
+		let pointerLine = d3.line()
 			.x(function (d) { return d.x })
 			.y(function (d) { return d.y });
 		//.interpolate("basis");  //this was from d3 verison 3 and has not been updated, may be broken
@@ -149,11 +149,11 @@ function Gauge(placeholderName, configuration) {
 			.attr("cx", this.config.cx)
 			.attr("cy", this.config.cy)
 			.attr("r", 0.12 * this.config.raduis)
-			.style("fill", "#4684EE")
+			.style("fill", this.config.trendColor)  //#4684EE
 			.style("stroke", "#666")
 			.style("opacity", 1);
 
-		var fontSize = Math.round(this.config.size / 10);
+		fontSize = Math.round(this.config.size / 10);
 		pointerContainer.selectAll("text")
 			.data([midValue])
 			.enter()
@@ -170,21 +170,21 @@ function Gauge(placeholderName, configuration) {
 	}
 
 	this.buildPointerPath = function (value) {
-		var delta = this.config.range / 13;
+		let delta = this.config.range / 13;
 
-		var head = valueToPoint(value, 0.85);
-		var head1 = valueToPoint(value - delta, 0.12);
-		var head2 = valueToPoint(value + delta, 0.12);
+		let head = valueToPoint(value, 0.85);
+		let head1 = valueToPoint(value - delta, 0.12);
+		let head2 = valueToPoint(value + delta, 0.12);
 
-		var tailValue = value - (this.config.range * (1 / (270 / 360)) / 2);
-		var tail = valueToPoint(tailValue, 0.28);
-		var tail1 = valueToPoint(tailValue - delta, 0.12);
-		var tail2 = valueToPoint(tailValue + delta, 0.12);
+		let tailValue = value - (this.config.range * (1 / (270 / 360)) / 2);
+		let tail = valueToPoint(tailValue, 0.28);
+		let tail1 = valueToPoint(tailValue - delta, 0.12);
+		let tail2 = valueToPoint(tailValue + delta, 0.12);
 
 		return [head, head1, tail2, tail, tail1, head2, head];
 
 		function valueToPoint(value, factor) {
-			var point = self.valueToPoint(value, factor);
+			let point = self.valueToPoint(value, factor);
 			point.x -= self.config.cx;
 			point.y -= self.config.cy;
 			return point;
@@ -205,26 +205,32 @@ function Gauge(placeholderName, configuration) {
 	}
 
 	this.redraw = function (value, transitionDuration) {
-		var pointerContainer = this.body.select(".pointerContainer");
+		let pointerContainer = this.body.select(".pointerContainer");
 
-		pointerContainer.selectAll("text").text(Math.round(value));
+		if ((Math.abs(this.config.min - this.config.max) < 1)) {
+			let f= parseFloat(value);
+			pointerContainer.selectAll("text").text(f.toPrecision(4).substr(0,5));
+		} else {
+			pointerContainer.selectAll("text").text(Math.round(value));
+		}
+		
 
-		var pointer = pointerContainer.selectAll("path");
+		let pointer = pointerContainer.selectAll("path");
 		pointer.transition()
 			.duration(undefined != transitionDuration ? transitionDuration : this.config.transitionDuration)
 			//.delay(0)
 			//.ease("linear")
 			//.attr("transform", function(d) 
 			.attrTween("transform", function () {
-				var pointerValue = value;
+				let pointerValue = value;
 				if (value > self.config.max) pointerValue = self.config.max + 0.02 * self.config.range;
 				else if (value < self.config.min) pointerValue = self.config.min - 0.02 * self.config.range;
-				var targetRotation = (self.valueToDegrees(pointerValue) - 90);
-				var currentRotation = self._currentRotation || targetRotation;
+				let targetRotation = (self.valueToDegrees(pointerValue) - 90);
+				let currentRotation = self._currentRotation || targetRotation;
 				self._currentRotation = targetRotation;
 
 				return function (step) {
-					var rotation = currentRotation + (targetRotation - currentRotation) * step;
+					let rotation = currentRotation + (targetRotation - currentRotation) * step;
 					return "translate(" + self.config.cx + ", " + self.config.cy + ") rotate(" + rotation + ")";
 				}
 			});
@@ -253,45 +259,82 @@ function Gauge(placeholderName, configuration) {
 
 
 
-function TrendPlot(ctx, configuration) {
+function TrendPlot(ctx, configuration, fps = 4) {
 	this.ctx = ctx;
-	var HEIGHT = ctx.canvas.clientHeight;
-	var WIDTH = ctx.canvas.clientWidth;
-	var self = this; // for internal d3 functions
-	var text_x = 2;
-	var label_max_x = 40;
-	var text_height = 8;
-	var line_height = 1;
-	
-	
+	this.fps = fps;
+	let self = this; // for internal d3 functions
+	let HEIGHT = ctx.canvas.clientHeight;
+	let WIDTH = ctx.canvas.clientWidth;
+	let text_x = 2;
+	let label_max_x = 40;
+	let text_height = 8;
+	let pip_height = 1;
+	let last_line_y = {};
+	let frame_number = 0;
+	let tick_interval = 60;//seconds between vertical bars
+
 	this.configure = function (configuration) {
 		this.config = configuration;
 
-		this.config.padding =  5;
+		this.config.padding = 5;
 		this.config.backgroundColor = '#EEE';
+	}
 
+	this.advanceTrend = function () {
+		if (frame_number % (this.fps * tick_interval) == 0) {
+			let now = new Date();
+			let text_y = HEIGHT;
 
-		//this.config.trendColor = configuration.trendColor || "rgba(255, 220, 0, 0.5 )";
+			this.ctx.strokeStyle = "#BBB";
+			this.ctx.beginPath();
+			this.ctx.moveTo(label_max_x + 1, 0);
+			this.ctx.lineTo(label_max_x + 1, HEIGHT - 10);
+			this.ctx.stroke();
+
+			this.ctx.strokeStyle = "#000";
+			this.ctx.fillStyle = "#000";
+			this.ctx.font = '8px serif';
+			this.ctx.fillText(now.toLocaleTimeString(), label_max_x, text_y);
+
+		}
+
+		let imgData = ctx.getImageData(label_max_x, 0, WIDTH - label_max_x, HEIGHT);
+		this.ctx.fillStyle = this.config.backgroundColor;
+		this.ctx.fillRect(0, 0, WIDTH, HEIGHT);
+		this.ctx.putImageData(imgData, label_max_x + 1, 0);
+		frame_number++;
 	}
 
 	this.clearTrend = function () {
-		var imgData = ctx.getImageData(label_max_x, 0, WIDTH-label_max_x, HEIGHT);
-		//this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
-		this.ctx.fillStyle  = this.config.backgroundColor;
-		this.ctx.fillRect(0, 0, WIDTH, HEIGHT);
-		//ctx.strokeStyle = "#FF0000";
-		//ctx.strokeRect(label_max_x, 0, WIDTH-label_max_x, HEIGHT);
-		this.ctx.putImageData(imgData, label_max_x+1, 0);
+		this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
+		this.ctx.fillStyle = this.config.backgroundColor;
+		this.ctx.fillRect(0, 0, WIDTH, HEIGHT)
 	}
 
 	this.plotTrend = function (value, label = "Neu", color = "rgba(255, 220, 0, 0.5 )") {
-		
-		var h = HEIGHT - (this.config.padding *2);
-		var y = (h - (value * h)) + this.config.padding;
+
+		let h = HEIGHT - (this.config.padding * 2);
+		let text_y = (h - (value * h)) + this.config.padding * 1.5; //+y is down
+		let line_y = text_y - (text_height / 2)
+		if (!last_line_y[label]) {
+			last_line_y[label] = line_y;
+		}
+
+
 		this.ctx.fillStyle = color;
+		this.ctx.strokeStyle = color;
+
+		//we make a vertical line so there are no gaps when trend changes by more then one px
+		this.ctx.fillRect(label_max_x - 1, line_y, 2, pip_height);
+		this.ctx.beginPath();
+		this.ctx.moveTo(label_max_x + 1, line_y);
+		this.ctx.lineTo(label_max_x + 1, last_line_y[label]);
+		this.ctx.stroke();
+
 		this.ctx.font = '8px serif';
-		this.ctx.fillText(label, text_x, y);
-		this.ctx.fillRect(label_max_x - 1, y-(text_height/2)+line_height/2, 4, line_height);
+		this.ctx.fillText(label, text_x, text_y);
+		//store prevous line_y for big jumps
+		last_line_y[label] = line_y;
 	}
 
 	// initialization

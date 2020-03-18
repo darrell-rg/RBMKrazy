@@ -3,13 +3,6 @@ This is the main code for the simulation and rendering
 
 */
 "use strict";
-let canvas = document.getElementById("gameCanvas");
-let context = canvas.getContext("2d");
-let HEIGHT = context.canvas.clientHeight;
-let WIDTH = context.canvas.clientWidth;
-
-let frame_number = 0;
-
 let FPS = 60;
 
 let WALL_THICKNESS = 5;
@@ -30,22 +23,30 @@ let MIN_NEUTRON_SPEED = 0.5;
 let MAX_NEXT_GEN_LEN = 1024;
 let MAX_SIMULATED_NEUTRONS = 20480; //how many are simualted
 let MAX_DRAWN_NEUTRONS = 4096; // how many actualy drawn
-let CROSSSECTION_SCALE = 0.5;  //increase to things go out of control faster
+let CROSSSECTION_SCALE = 0.9;  //increase to make things go out of control faster
 let FUEL_EXPLODE_TEMP = 1000;  //temp at which a fuel rod will pop
-
-
-let HEAT_PER_FISION = 0.5; 
-let POWER_SCALE = 8*FPS;
-
+let HEAT_PER_FISION = 0.5;
+let POWER_SCALE = 8 * FPS;
 let U_SPECIFIC_HEAT = 116; //J/(kg K)
 let U_THERMAL_CONDUCTIVITY = 116; //W/(m K)
-
 let HEAT_TRANSFER_COEFFICIENT = 2e-6 / FPS; //increase this to make cooling more effective
+
+
+let canvas = document.getElementById("gameCanvas");
+let context = canvas.getContext("2d");
+let HEIGHT = context.canvas.clientHeight;
+let WIDTH = context.canvas.clientWidth;
 
 let tempCanvas = document.getElementById("tempCanvas");
 let tempContext = tempCanvas.getContext("2d", { alpha: false });  //,{ alpha: false } is supposed to be faster but actually seems slower
-tempCanvas.width = FUEL_SIZE / 4;
-tempCanvas.height = FUEL_SIZE / 4;
+tempCanvas.width = FUEL_SIZE * 4;
+tempCanvas.height = FUEL_SIZE * 4;
+
+
+let heatCanvas = document.getElementById("heatMapCanvas");
+let heatContext = tempCanvas.getContext("2d", { alpha: false });  //,{ alpha: false } is supposed to be faster but actually seems slower
+tempCanvas.width = FUEL_SIZE * 5;
+tempCanvas.height = FUEL_SIZE * 5;
 
 
 let trendCanvas = document.getElementById("trendCanvas");
@@ -53,11 +54,13 @@ let trendContext = trendCanvas.getContext("2d");  //,{ alpha: false } is suppose
 trendCanvas.width = FUEL_SIZE * 5.5;
 trendCanvas.height = FUEL_SIZE * 5;
 
+//diagnostic info
+let frame_number = 0;
 let t0 = 1, t1 = 1;
 let avg_tick_time = 66.0;
 let avg_draw_time = 66.0;
 let avg_physics_time = 66.0;
-let worth = 1.0;
+let Keff = 1.00;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -110,11 +113,7 @@ Matter.World.add(engine.world, mouseConstraint);
 // keep the mouse in sync with rendering
 render.mouse = mouse;
 
-let stats = {
-    neutron_count: 1,
-    mean_fuel_temp: 1,
-    time: 1,
-}
+
 
 // matter.js has a built in random range function, but it is deterministic
 function rand(min, max) {
@@ -187,9 +186,9 @@ function make_moderator(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) 
         },
         plugin: {
             r: FUEL_SIZE / 2,
-            crossSection: 0.5,
+            crossSection: 0.5 * CROSSSECTION_SCALE,
             temperature: 20,
-            spontaneousFisionRate: 0.1,
+            spontaneousFisionRate: 0,
         }
 
     });
@@ -215,9 +214,9 @@ function make_reflector(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) 
         },
         plugin: {
             r: FUEL_SIZE / 2,
-            crossSection: 0.5,
+            crossSection: 0.5 * CROSSSECTION_SCALE,
             temperature: 20,
-            spontaneousFisionRate: 0.1,
+            spontaneousFisionRate: 0,
         }
 
     });
@@ -244,9 +243,9 @@ function make_poison(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) {
         },
         plugin: {
             r: FUEL_SIZE / 2,
-            crossSection: 0.02,
+            crossSection: 0.02 * CROSSSECTION_SCALE,
             temperature: 20,
-            spontaneousFisionRate: 0.1,
+            spontaneousFisionRate: 0,
         }
 
     });
@@ -263,141 +262,31 @@ function getRandNeutron(x, y, last_id = null) {
     };
 }
 
-let neutrons = []; //d3.range(10).map(getRandNeutron);
-let fuels = [];
-let moderators = [];
-let reflectors = [];
-let core_materials = [];
-let poisons = [];
-let avg_rads = 1;
-let avg_power = 1;
-let avg_n_speed = 1;
-let total_births = 1;
-let total_deaths = 1;
-let curently_alive = 1;
-let coolent_temperature_in = 20;
-let coolent_temperature_out = 20;
-let game_running = true;
 
-
-
-//restart the world with new random init
-function initStacks() {
-    Matter.World.clear(engine.world);
-
-    neutrons = [];
-    fuels = [];
-    moderators = [];
-    reflectors = [];
-    poisons = [];
-    core_materials = [];
-    avg_rads = 1;
-    avg_power = 1;
-    avg_n_speed = 1;
-    total_births = 1;
-    total_deaths = 1;
-    curently_alive = 1;
-    coolent_temperature_in = 20;
-    coolent_temperature_out = 20;
-
-    game_running = true;
-
-    let x_pos = FUEL_SIZE * 4;
-    let drop_height = 450;
-    let reactor_width = FUEL_SIZE * 10.2;
-    let reactor_center = x_pos + reactor_width / 2;
-
-    let poison_stack = Matter.Composites.stack(800 + x_pos, HEIGHT - drop_height, 1, 10, 0, 0, function (x, y) {
-        let m = make_poison(x, y);
-        poisons.push(m);
-        core_materials.push(m);
-        return m;
-    });
-    let moderator_stack = Matter.Composites.stack(700 + x_pos, HEIGHT - drop_height, 1, 10, 0, 0, function (x, y) {
-        let m = make_moderator(x, y);
-        moderators.push(m);
-        core_materials.push(m);
-        return m;
-    });
-    let reflector_left = Matter.Composites.stack(10 + x_pos, HEIGHT - drop_height, 2, 8, 0, 0, function (x, y) {
-        let m = make_reflector(x, y);
-        reflectors.push(m);
-        core_materials.push(m);
-        return m;
-    });
-    let reflector_right = Matter.Composites.stack(x_pos + reactor_width - (2 * FUEL_SIZE), HEIGHT - drop_height - 50, 2, 8, 0, 0, function (x, y) {
-        let m = make_reflector(x, y);
-        reflectors.push(m);
-        core_materials.push(m);
-        return m;
-    });
-    let reflector_xtra = Matter.Composites.stack((2 * FUEL_SIZE), HEIGHT - drop_height, 1, 10, 0, 0, function (x, y) {
-        let m = make_reflector(x, y);
-        reflectors.push(m);
-        core_materials.push(m);
-        return m;
-    });
-    // let reflector_top = Matter.Composites.stack(x_pos, HEIGHT - drop_height - 300, 10, 1, 0, 0, function (x, y) {
-    //     let m = make_reflector(x, y);
-    //     reflectors.push(m);
-    //     core_materials.push(m);
-    //     return m;
-    // });
-    let reflector_bottom = Matter.Composites.stack(x_pos, HEIGHT - 40, 10, 1, 0, 0, function (x, y) {
-        let m = make_reflector(x, y);
-        reflectors.push(m);
-        core_materials.push(m);
-        return m;
-    });
-
-
-    let rand_stack = Matter.Composites.stack(x_pos + FUEL_SIZE * 2, HEIGHT - drop_height + 50, 6, 6, 0, 0, function (x, y) {
-        let rnd = Math.random();
-        if (rnd < 0.25) {
-            let m = make_moderator(x, y);
-            moderators.push(m);
-            core_materials.push(m);
-            return m;
-        }
-        if (rnd < 0.35) {
-            let m = make_reflector(x, y);
-            reflectors.push(m);
-            core_materials.push(m);
-            return m;
-        }
-        if (rnd < 0.40) {
-            let m = make_poison(x, y);
-            poisons.push(m);
-            core_materials.push(m);
-            return m;
-        }
-        let f = make_fuel(x, y);
-        fuels.push(f);
-        return f;
-    });
-
-
-    Matter.World.add(engine.world, [
-        poison_stack,
-        moderator_stack,
-        reflector_bottom,
-        reflector_left,
-        reflector_right,
-        //reflector_top,
-        reflector_xtra,
-        rand_stack,
-        // boundary walls
-        wall(WIDTH / 2, 0, WIDTH, WALL_THICKNESS),   // top
-        wall(WIDTH / 2, HEIGHT, WIDTH, WALL_THICKNESS), // bottom
-        wall(0, HEIGHT / 2, WALL_THICKNESS, HEIGHT),   // left edge
-        wall(x_pos, HEIGHT, WALL_THICKNESS, HEIGHT),  // reactor right
-        wall(reactor_width + x_pos, HEIGHT, WALL_THICKNESS, HEIGHT),   // reactor left wall
-        wall(WIDTH, HEIGHT / 2, WALL_THICKNESS, HEIGHT), // right edge
-    ]);
-
-    //re add mouse since we deleted everything
-    Matter.World.add(engine.world, mouseConstraint);
+//return a new empty simulation state object
+function getEmptyState() {
+    let state = { //holds the current state of the game
+        neutrons: []
+        , fuels: []
+        , moderators: []
+        , reflectors: []
+        , core_materials: []
+        , poisons: []
+        , avg_rads: 1
+        , avg_power: 1
+        , avg_n_speed: 1
+        , total_births: 1
+        , total_deaths: 1
+        , curently_alive: 1
+        , coolent_temperature_in: 20
+        , coolent_temperature_out: 20
+        , startTime: new Date()
+    }
+    return state;
 }
+
+
+let state = getEmptyState();
 
 
 function startSim() {
@@ -425,7 +314,7 @@ function inRange(neutron, fuel_rod) {
 }
 
 function shouldBeAbsorbed(neutron) {
-    for (const p of poisons) {
+    for (const p of state.poisons) {
         //roll for fision
         if (inRange(neutron, p) && Math.random() < p.plugin.crossSection) {
             return p;
@@ -435,7 +324,7 @@ function shouldBeAbsorbed(neutron) {
 }
 
 function shouldBeReflected(neutron) {
-    for (const reflector of reflectors) {
+    for (const reflector of state.reflectors) {
         //roll for fision
         if (neutron.lastInteratedWith === reflector.id) {
             return false;
@@ -448,7 +337,7 @@ function shouldBeReflected(neutron) {
 }
 
 function shouldBeModerated(neutron) {
-    for (const moderator of moderators) {
+    for (const moderator of state.moderators) {
         //roll for fision
         if (neutron.lastInteratedWith === moderator.id) {
             return false;
@@ -461,7 +350,7 @@ function shouldBeModerated(neutron) {
 }
 
 function shouldSplit(neutron) {
-    for (let fuel_rod of fuels) {
+    for (let fuel_rod of state.fuels) {
         if (neutron.lastInteratedWith === fuel_rod.id) {
             return false;
         }
@@ -475,18 +364,17 @@ function shouldSplit(neutron) {
     return false;
 }
 
-function get_transfered_heat( material,mcp_speed){
+function get_transfered_heat(material, mcp_speed) {
     //COOLING_RATE * mcp_speed * (1 + Math.log(m.plugin.temperature));
     //Q=hA(t1-t2)
-    let t2 = coolent_temperature_in + 273.15;
+    let t2 = state.coolent_temperature_in + 273.15;
     let t1 = material.plugin.temperature + 273.15;
     let h = HEAT_TRANSFER_COEFFICIENT * mcp_speed;
     let A = material.area
-    let Q = h * A * ( t1 - t2 );
+    let Q = h * A * (t1 - t2);
 
-    if(Math.abs(Q) > 9999)
-    {
-        console.log("Q range error",Q);
+    if (Math.abs(Q) > 9999) {
+        console.log("Q range error", Q);
         return 0;
     }
 
@@ -503,8 +391,8 @@ function tick_neutrons(neutrons) {
     let new_speed = 1;
     let mcp_speed = mcp_slider.value / 100.0;
 
-    //calculate power
-    for (let m of core_materials) {
+    //process heat for non-fuels
+    for (let m of state.core_materials) {
         //let Q = get_transfered_heat(m,mcp_speed);
 
         //m.plugin.temperature -= (Q / (U_SPECIFIC_HEAT/(m.mass*1000)));
@@ -512,16 +400,16 @@ function tick_neutrons(neutrons) {
 
     }
 
-    for (let fuel_rod of fuels) {
-        let Q = get_transfered_heat(fuel_rod,mcp_speed);
+    for (let fuel_rod of state.fuels) {
+        let Q = get_transfered_heat(fuel_rod, mcp_speed);
         //dT = Q/(m*cp) 
         if (fuel_rod.plugin.temperature > FUEL_EXPLODE_TEMP) {
             //overheated fuel rods release a lot of rads!
             new_rads += 2;
         }
 
-        fuel_rod.plugin.temperature -= (Q / (U_SPECIFIC_HEAT/(fuel_rod.mass*1000)));
-        new_power += Q*POWER_SCALE;
+        fuel_rod.plugin.temperature -= (Q / (U_SPECIFIC_HEAT / (fuel_rod.mass * 1000)));
+        new_power += Q * POWER_SCALE;
 
         //roll for spontaneousFision
         if (Math.random() < fuel_rod.plugin.spontaneousFisionRate) {
@@ -569,6 +457,7 @@ function tick_neutrons(neutrons) {
             n.v *= 0.5;
             if (n.v < MIN_NEUTRON_SPEED) {
                 n.v = MIN_NEUTRON_SPEED;
+                //TODO: MIN_NEUTRON_SPEED gets higher with tempreture
             }
             return n;
         }
@@ -616,15 +505,15 @@ function tick_neutrons(neutrons) {
     }
 
 
-    total_births += births;
-    total_deaths += deaths;
-    curently_alive = total_births - total_deaths;
-    avg_rads = ((avg_rads * 29) + new_rads) / 30.0; //smooth rads
-    avg_power = ((avg_power * 9) + new_power) / 10.0; //smooth power
+    state.total_births += births;
+    state.total_deaths += deaths;
+    state.curently_alive = state.total_births - state.total_deaths;
+    state.avg_rads = ((state.avg_rads * 29) + new_rads) / 30.0; //smooth rads
+    state.avg_power = ((state.avg_power * 9) + new_power) / 10.0; //smooth power
 
     if (new_neutrons.length > 0) {
         new_speed = (total_n_speed + 0.1) / new_neutrons.length;
-        avg_n_speed = ((avg_n_speed * 29) + new_speed) / 30.0;
+        state.avg_n_speed = ((state.avg_n_speed * 29) + new_speed) / 30.0;
     }
     return new_neutrons;
 }
@@ -666,24 +555,35 @@ function draw_neutrons_fast(neutrons) {
     }
 }
 
+
+let stats = {
+    neutron_count: 1,
+    mean_fuel_temp: 1,
+    time: 1,
+}
+
 function get_stats() {
     let sum = 0;//= fuels.reduce((previous, current) => current.plugin.temperature += previous);
 
     let max_temp = 0;
-    for (const fuel_rod of fuels) {
+    for (const fuel_rod of state.fuels) {
         sum += fuel_rod.plugin.temperature;
         if (max_temp < fuel_rod.plugin.temperature) {
             max_temp = fuel_rod.plugin.temperature;
         }
     }
 
-    let avg_temp = sum / fuels.length;
+    let avg_temp = sum / state.fuels.length;
 
     let stats = {
-        neutron_count: neutrons.length,
+        neutron_count: state.neutrons.length,
         mean_fuel_temp: avg_temp,
         max_fuel_temp: max_temp,
         time: performance.now()
+    }
+    if(!stats.neutron_count)
+    {
+        stats.neutron_count = 0
     }
     return stats;
 }
@@ -695,7 +595,7 @@ function beforeRenderHandler() {
     context.clearRect(0, 0, WIDTH, HEIGHT);
 
     //draw heat circles behind fuel
-    fuels.forEach(function (fuel_rod) {
+    state.fuels.forEach(function (fuel_rod) {
         let r = (FUEL_SIZE / 2) + 4;
         let fill_color = "255, 0, 0,";
         //fuel gets bigger and "explodes" if tempreture gets above a threshold
@@ -725,52 +625,59 @@ function beforeRenderHandler() {
 
 function afterRenderHandler() {
 
+    let now = new Date();
+    let elapsed = (now - state.startTime) / 1000;
+
     t1 = performance.now();
     avg_physics_time = ((avg_physics_time * 29) + (t1 - t0)) / 30.0;
 
     t0 = performance.now();
-    neutrons = tick_neutrons(neutrons);
+    state.neutrons = tick_neutrons(state.neutrons);
     t1 = performance.now();
     avg_tick_time = ((avg_tick_time * 29) + (t1 - t0)) / 30.0;
 
     t0 = performance.now();
-    draw_neutrons(neutrons);
+    draw_neutrons(state.neutrons);
     t1 = performance.now();
     avg_draw_time = ((avg_draw_time * 29) + (t1 - t0)) / 30.0;
 
     let prev_stats = stats;
     stats = get_stats();
-    let new_worth = (stats.neutron_count / (prev_stats.neutron_count + 0.000000000001));
-    if (!isNaN(new_worth)) {
-        worth = ((worth * 0.9) + (new_worth * 0.1));
+    let new_Keff = 1.0;
+    if (prev_stats.neutron_count > 0){
+        new_Keff = stats.neutron_count / prev_stats.neutron_count;
     }
-    //document.getElementById("worth").innerHTML = "worth: " + worth.toPrecision(10);
-    document.getElementById("worth").innerHTML = "alive: " + curently_alive.toPrecision(5);
+    if (Math.abs(prev_stats.neutron_count -  stats.neutron_count) < 2){
+        new_Keff = 1.0;
+    }
+    //Keff needs a lot of smoothing to be usefull
+    Keff = ((Keff * 199.0) + new_Keff ) / 200.0;
 
-    //document.getElementById("worth" + "GaugeContainer").dataset.value = worth;
+
     document.getElementById("meanFuelTemp" + "GaugeContainer").dataset.value = stats.mean_fuel_temp;
     document.getElementById("maxFuelTemp" + "GaugeContainer").dataset.value = stats.max_fuel_temp;
     document.getElementById("neutron_count" + "GaugeContainer").dataset.value = stats.neutron_count;
-    document.getElementById("neutron_speed" + "GaugeContainer").dataset.value = avg_n_speed;
-    document.getElementById("rad" + "GaugeContainer").dataset.value = avg_rads;
-    document.getElementById("power" + "GaugeContainer").dataset.value = avg_power;
-    document.getElementById("perf").innerHTML =
-        "      tick N : " + avg_tick_time.toPrecision(3) + " ms."
-        + "<br>draw N : " + avg_draw_time.toPrecision(3) + " ms."
-        + "<br>pyhsics: " + avg_physics_time.toPrecision(3) + " ms.";
+    //document.getElementById("neutron_speed" + "GaugeContainer").dataset.value = state.avg_n_speed;
+    document.getElementById("power" + "GaugeContainer").dataset.value = state.avg_power;
+    document.getElementById("rad" + "GaugeContainer").dataset.value = state.avg_rads;
+    document.getElementById("Keff" + "GaugeContainer").dataset.value = Keff;
+
+
+    document.getElementById("perf").innerHTML = "Elapsed: " + elapsed.toPrecision(5).substr(0,6) + " s"
+        + "<br> simulating: " + state.curently_alive.toPrecision(5).substr(0,6) + " N"
+        + "<br> N tick time: " + avg_tick_time.toPrecision(5).substr(0,6) + "ms"
+        + "<br> N draw time: " + avg_draw_time.toPrecision(5).substr(0,6) + "ms"
+        + "<br>pyhsics tick+draw: " + avg_physics_time.toPrecision(5).substr(0,6) + "ms";
     frame_number += 1;
     checkGameOver();
 }
 
 
-function checkGameOver()
-{
-    if(avg_rads > 50)
-    {
-        showGameOver("Too many rads emmited offsite. The NRC shut you down! You did not get a very favorable review in the IAEA report...");
+function checkGameOver() {
+    if (state.avg_rads > 50) {
+        showGameOver("Too many rads emmited offsite. The NRC shut you down!<br> You did not get a very favorable review in the IAEA report...");
     }
-    if(stats.mean_fuel_temp > 1000)
-    {
-        showGameOver("A meltdown ‽  How did you possibly manage to melt down an RBMK reactor? Now this browser tab wont't be usable for 1000 years!");
+    if (stats.mean_fuel_temp > 1000) {
+        showGameOver("A meltdown ‽  How did you possibly manage to melt down an RBMK reactor? <br> Now this browser tab wont't be usable for 1000 years!");
     }
 }

@@ -12,34 +12,44 @@
             background-color: #000;
             font-family: sans-serif;
         }
-        div.fixed {
-            position: fixed;
-            top: 10;
-            right: 0;
-            width: 300px;
-            border: 3px solid #73AD21;
-            z-index: 4;
-        }
-        #debugInfo {
+
+        #rightSidebar {
+            float: right;
             position: fixed;
             top: 10;
             right: 0;
             /* width: 300px; */
             border: 2px solid #73AD21;
-            z-index: 4;
-            padding: 0px;
+            z-index: 0;
+            padding: 2px;
+            margin: 0px;
             color: azure;
+            text-align: right;
         }
+
+        #guages {
+            display: block;
+            max-width: 270px;
+            top: 0px;
+            left: 0px;
+        }
+
+        .guage {
+            float: left;
+        }
+
+
         #gameCanvas {
             padding: 0px;
             border: 0px;
             margin: 0px;
-            z-index: 1;
+            z-index: 0;
             position: fixed;
             top: 0;
             right: 0;
             /* background-color: black; */
         }
+
         #trendCanvas {
             padding: 0px;
             margin: 0px;
@@ -54,7 +64,6 @@
         .slider {
             -webkit-appearance: none;
             /* Override default CSS styles */
-            appearance: none;
             width: 100%;
             /* Full-width */
             height: 25px;
@@ -69,23 +78,26 @@
             /* 0.2 seconds transition on hover */
             transition: opacity .2s;
         }
+
         .slidecontainer {
             width: 100%;
+            height: 25px;
             /* Width of the outside container */
         }
+
         /* Mouse-over effects */
         .slider:hover {
             opacity: 0.8;
             /* Fully shown on mouse-over */
         }
+
         .sliderDisplay {
-            position: relative;
+            padding-left: 10px;
+            padding-top: 5px;
+            position: absolute;
             z-index: -1;
-            top: 25px;
-            left: 15px;
-            width: 100px;
-            overflow: hidden;
         }
+
         /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -124,6 +136,7 @@
             border-bottom: 1px dotted black;
             /* If you want dots under the hoverable text */
         }
+
         /* Tooltip text */
         .tooltip .tooltiptext {
             visibility: hidden;
@@ -143,6 +156,7 @@
             opacity: 0;
             transition: opacity 0.3s;
         }
+
         /* Tooltip arrow */
         .tooltip .tooltiptext::after {
             content: "";
@@ -154,6 +168,7 @@
             border-style: solid;
             border-color: #555 transparent transparent transparent;
         }
+
         /* Show the tooltip text when you mouse over the tooltip container */
         .tooltip:hover .tooltiptext {
             visibility: visible;
@@ -170,16 +185,20 @@
             background-color: #EEE;
             font-size: smaller;
         }
+
         .card h4 {
             margin: 5px;
         }
+
         .card img {
             border-radius: 5px;
         }
+
         /* On mouse-over, add a deeper shadow */
         .card:hover {
             box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
         }
+
         /* Add some padding inside the card container */
         .card .container {
             padding: 2px 8px;
@@ -189,9 +208,29 @@
             float: inline-end;
         }
     </style>
+
+    <script src="vendor/d3.v5.min.js" charset="utf-8"></script>
+    <script src="vendor/matter.js" charset="utf-8"></script>
+    <script src="guages.js" charset="utf-8"></script>
+
 </head>
 
-<body onload="initializeSim()">
+<body onload="initializeGuages()">
+    <canvas id="gameCanvas" width="800" height="700"></canvas>
+    <div id="rightSidebar">
+
+        <div id="guages"></div>
+        <div id="thermo"></div>
+        <canvas id="trendCanvas" width="250" height="250"></canvas>
+        <div class="slidecontainer">
+            <span class='sliderDisplay' id="mcp_display">MCP Speed: 50</span>
+            <input type="range" min="1" max="100" value="50" class="slider" id="mcp_speed">
+        </div>
+        <canvas id="heatMapCanvas" width="250" height="250"></canvas>
+        <br>
+        <input type="button" value="Help" onclick="showHelp();">
+
+    </div>
 
     <div id="gameOver" class="modal" hidden>
         <h1>Game Over</h1>
@@ -208,6 +247,9 @@
             <input type="button" value="X" onclick="hideModals();">
         </div>
         <h1 style="margin: 0px;">RBMKrazy: a game of crossed sections</h1>
+
+        <div id="perf" style="float:right; font-size: smaller; text-align: right; font-family: monospace;"></div>
+
         <ul>
             <li>Stack element blocks to build your reactor. </li>
             <li>Monitor the guages and trendplot to keep the reactor under control. </li>
@@ -225,7 +267,7 @@
         </div>
 
         <hr>
-        <div class="elemetCards">
+        <div class="elementCards">
 
             <div class="card">
                 <img src="img/B.svg" alt="Boron " style="width:100%">
@@ -270,9 +312,9 @@
         <div style="float:right">
             Select Level:
             <select id="levelSelect">
-                <option value="Criticality">Criticality</option>
-                <option value="MOAR PWR">MOAR PWR</option>
-                <option value="Earthquake">Earthquake</option>
+                <option value="level1">Criticality</option>
+                <option value="level2" disabled>MOAR PWR</option>
+                <option value="level3" disabled>Earthquake</option>
             </select>
 
             <input type="button" value="Reset/Start Level" onclick="reset();">
@@ -281,70 +323,27 @@
 
     </div>
 
-    <canvas id="gameCanvas" width="800" height="700"></canvas>
-    <div id="debugInfo">
 
-        <input type="button" value="Help" onclick="showHelp();">
-        <input type="button" value="Reset" onclick="reset();">
-        <!-- Debug Info:
-        <div id="neutron_count">test debug info</div>
-        <div id="mean_fuel_temp">test debug info</div> -->
-
-        <div id="worth">test debug info</div>
-        <div id="perf"></div>
-
-        <span id="neutron_countGaugeContainer" data-value="0" class="tooltip">
-            <span class="tooltiptext">Watch this trend to avoid going supercritical!</span>
-        </span>
-        <span id="neutron_speedGaugeContainer" data-value="0" class="tooltip">
-            <span class="tooltiptext">Slow neutrons increase the chance of fission</span>
-        </span>
-        <span id="radGaugeContainer" data-value="0" class="tooltip">
-            <span class="tooltiptext">Radation emited offsite</span>
-        </span>
-        <div></div>
-        <span id="powerGaugeContainer" data-value="0" class="tooltip">
-
-        </span>
-        </span>
-        <span id="meanFuelTempGaugeContainer" data-value="0" class="tooltip">
-            <span class="tooltiptext">Avg tempreture of fuel elements</span>
-        </span>
-        <span id="maxFuelTempGaugeContainer" data-value="0" class="tooltip">
-            <span class="tooltiptext">Max tempreture of fuel elements</span>
-        </span>
-        <div id="thermo"></div>
-        <canvas id="trendCanvas" width="250" height="250"></canvas>
-        <div class="slidecontainer">
-            <span class='sliderDisplay' id="mcp_display">MCP Speed: 50</span>
-            <input type="range" min="1" max="100" value="50" class="slider" id="mcp_speed">
-
-            </span>
-        </div>
-    </div>
-    <h1>Game Paused</h1>
     <canvas id="tempCanvas" width="100" height="100"></canvas>
 
     <ol id="fuelList"></ol>
-    <script src="vendor/d3.v5.min.js" charset="utf-8"></script>
-    <script src="vendor/matter.js" charset="utf-8"></script>
-    <script src="guages.js" charset="utf-8"></script>
-    <!-- <script src="thermo.js" charset="utf-8"></script> -->
-    <script src="reactorMatterSim.js" charset="utf-8"></script>
-    <script>
-        var gauges = [];
-        var trendPlot = null;
 
-        var mcp_slider = document.getElementById("mcp_speed");
+    <script src="reactorMatterSim.js" charset="utf-8"></script>
+
+    <script>
+        let gauges = [];
+        let trendPlot = null;
+
+        let mcp_slider = document.getElementById("mcp_speed");
         // Update the current slider value (each time you drag the slider handle)
         mcp_slider.oninput = function () {
-            var output = document.getElementById("mcp_display");
+            let output = document.getElementById("mcp_display");
             output.innerHTML = "MCP Speed: " + this.value;
         }
 
 
         function hideModals() {
-            var modals = document.querySelectorAll(".modal");
+            let modals = document.querySelectorAll(".modal");
 
             modals.forEach(function (m) {
                 m.hidden = true;
@@ -366,34 +365,46 @@
         }
 
         function reset() {
-            initStacks();
-            hideModals();
+            stopSim();
+            let levelToLoad = document.getElementById("levelSelect").options[document.getElementById("levelSelect").selectedIndex].value;
+
+            import('./' + levelToLoad + '.js')
+                .then((level) => {
+                    // Do something with the module.
+                    level.initStacks();
+                    trendPlot.clearTrend();
+                    hideModals();
+
+                });
+
         }
 
-        function initializeSim() {
+        function initializeGuages() {
             //startup the guages
             createGauges();
-            setInterval(updateGauges, 250);
-            initStacks();
-            trendPlot = new TrendPlot(trendContext, {});
+            let guage_fps = 4;
+            setInterval(updateGauges, 1000 / guage_fps);
+            trendPlot = new TrendPlot(trendContext, {}), guage_fps;
+            trendPlot.clearTrend();
         }
 
         function updateGauges() {
-            trendPlot.clearTrend();
-            for (var key in gauges) {
-                var con = document.getElementById(key + "GaugeContainer");
+            trendPlot.advanceTrend();
+            for (let key in gauges) {
+                let con = document.getElementById(key + "GaugeContainer");
                 gauges[key].redraw(con.dataset.value);
-                var label = gauges[key].config.label;
-                var value = scaleValue(gauges[key], con.dataset.value);
-                var c = gauges[key].config.trendColor;
+                let label = gauges[key].config.label;
+                let value = scaleValue(gauges[key], parseFloat(con.dataset.value));
+                let c = gauges[key].config.trendColor;
                 trendPlot.plotTrend(value, label, c);
             }
 
         }
 
         function scaleValue(gauge, rawValue) {
-            var overflow = 0; //10;\
-            var scaleValue = (rawValue - gauge.config.min) / gauge.config.max;
+            let overflow = 0; //10;\
+            let range = Math.abs(gauge.config.min-gauge.config.max)
+            let scaleValue = (rawValue - gauge.config.min ) / range;
             if (scaleValue < 0)
                 scaleValue = 0;
             if (scaleValue > 1)
@@ -404,18 +415,33 @@
 
 
         function createGauges() {
-            createGauge("neutron_count", "N Flux", 0, MAX_DRAWN_NEUTRONS, "rgba(  0,   0, 255, 1 )");
-            createGauge("neutron_speed", "N Speed", 0, NEUTRON_INITIAL_V, "rgba(  0,  123, 255, 1 )");
-            createGauge("meanFuelTemp", "Mean Temp", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
-            createGauge("maxFuelTemp", "Max Temp", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
-            createGauge("rad", "Rads", 0, 50, "rgba(255,   0,   240, 1 )");
-            createGauge("power", "Power", 0, 500, "rgba(1,   240,  1, 1 )");
-            //createGauge("worth", "Worth", 0.99, 1.01);
-            //createGauge("test", "Test", -50, 50 );
+
+            
+            createGauge("Keff", "Keff", "Keffective how fast N population is growing", 0.995, 1.005, "rgba(  0,   123, 255, 1 )");
+            createGauge("neutron_count", "N Flux", "Watch this trend to avoid going supercritical!", 0, MAX_DRAWN_NEUTRONS, "rgba(  0,   0, 255, 1 )");
+            //createGauge("neutron_speed", "N Speed", "Slow neutrons increase the chance of fission", 0, NEUTRON_INITIAL_V, "rgba(  0,  33, 255, 1 )");
+            createGauge("power", "Power", "kw electrical power to grid", 0, 500, "rgba(1,   240,  1, 1 )");
+            createGauge("meanFuelTemp", "Mean Temp", "Avg tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
+            createGauge("maxFuelTemp", "Max Temp", "Max tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
+            createGauge("rad", "Rads", "Radation emited offsite", 0, 50, "rgba(255,   0,   240, 1 )");
+
         }
 
-        function createGauge(name, label, min, max, trendColor) {
-            var config =
+        function createGauge(name, label, tooltip, min, max, trendColor) {
+
+            let guage_id = name + "GaugeContainer";
+            let gaugeContainer = d3.select("#guages")
+                .append("div")
+                .attr("id", guage_id)
+                //.attr("class", "tooltip")
+                .attr("class", "guage")
+                .attr("data-value", 0);
+
+
+            //document.getElementById(guage_id).innerHTML = `<span class="tooltiptext">${tooltip}</span>`; 
+
+
+            let config =
             {
                 size: 100,
                 label: label,
@@ -424,15 +450,18 @@
                 minorTicks: 5
             }
 
-            var range = config.max - config.min;
+            let range = config.max - config.min;
             config.yellowZones = [{ from: config.min + range * 0.75, to: config.min + range * 0.9 }];
             config.redZones = [{ from: config.min + range * 0.9, to: config.max }];
             config.trendColor = trendColor;
-            gauges[name] = new Gauge(name + "GaugeContainer", config);
+            gauges[name] = new Gauge(guage_id, config);
             gauges[name].render();
         }
 
     </script>
+
+
+
 </body>
 
 </html>
