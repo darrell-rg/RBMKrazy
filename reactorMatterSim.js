@@ -21,7 +21,7 @@ let FUEL_RESTITUTION = 0.8; //default 0
 let FUEL_FRICTION_STATIC = 40.5//defult 0.5;
 let FUEL_CATAGORY = Matter.Body.nextCategory();
 let NEUTRON_CATAGORY = Matter.Body.nextCategory();
-let SPRITE_SCALE = 0.48;  //size to draw element sprite
+let SPRITE_SCALE = 1.2;  //size to draw element sprite
 
 let NEUTRON_INITIAL_V = 15; //how fast nutrons move
 let NEUTRON_INITIAL_R = 2; //larger value makes neutrons live longer
@@ -152,7 +152,7 @@ function make_fuel(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) {
             fillStyle: '#868e96',
             lineWidth: 1,
             sprite: {
-                texture: './img/U.png',
+                texture: './img/U.svg',
                 xScale: SPRITE_SCALE,
                 yScale: SPRITE_SCALE,
             }
@@ -180,7 +180,7 @@ function make_moderator(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) 
             fillStyle: '#268ef6',
             lineWidth: 1,
             sprite: {
-                texture: './img/C.png',
+                texture: './img/C.svg',
                 xScale: SPRITE_SCALE,
                 yScale: SPRITE_SCALE,
             }
@@ -208,7 +208,7 @@ function make_reflector(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) 
             fillStyle: '#268ef6',
             lineWidth: 1,
             sprite: {
-                texture: './img/Be.png',
+                texture: './img/Be.svg',
                 xScale: SPRITE_SCALE,
                 yScale: SPRITE_SCALE,
             }
@@ -237,7 +237,7 @@ function make_poison(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) {
             fillStyle: '#268ef6',
             lineWidth: 1,
             sprite: {
-                texture: './img/B.png',
+                texture: './img/B.svg',
                 xScale: SPRITE_SCALE,
                 yScale: SPRITE_SCALE,
             }
