@@ -674,10 +674,10 @@ function afterRenderHandler() {
 
 
 function checkGameOver() {
-    if (state.avg_rads > 50) {
+    if (state.avg_rads > 15) {
         showGameOver("Too many rads emmited offsite. The NRC shut you down!<br> You did not get a very favorable review in the IAEA report...");
     }
-    if (stats.mean_fuel_temp > 1000) {
-        showGameOver("A meltdown ‽  How did you possibly manage to melt down an RBMK reactor? <br> Now this browser tab wont't be usable for 1000 years!");
+    if (stats.mean_fuel_temp > 800) {
+        showGameOver("A meltdown ‽  How did you possibly manage to melt down an RBMK reactor? <br> Now this browser tab won't be usable for 1000 years!");
     }
 }

@@ -405,29 +405,26 @@
             let overflow = 0; //10;\
             let range = Math.abs(gauge.config.min-gauge.config.max)
             let scaleValue = (rawValue - gauge.config.min ) / range;
-            if (scaleValue < 0)
-                scaleValue = 0;
-            if (scaleValue > 1)
-                scaleValue = 1;
+            // if (scaleValue < 0)
+            //     scaleValue = 0;
+            // if (scaleValue > 1)
+            //     scaleValue = 1;
 
-            return scaleValue;
+            return scaleValue; b
         }
 
 
         function createGauges() {
-
-            
             createGauge("Keff", "Keff", "Keffective how fast N population is growing", 0.995, 1.005, "rgba(  0,   123, 255, 1 )");
             createGauge("neutron_count", "N Flux", "Watch this trend to avoid going supercritical!", 0, MAX_DRAWN_NEUTRONS, "rgba(  0,   0, 255, 1 )");
             //createGauge("neutron_speed", "N Speed", "Slow neutrons increase the chance of fission", 0, NEUTRON_INITIAL_V, "rgba(  0,  33, 255, 1 )");
             createGauge("power", "Power", "kw electrical power to grid", 0, 500, "rgba(1,   240,  1, 1 )");
             createGauge("meanFuelTemp", "Mean Temp", "Avg tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
             createGauge("maxFuelTemp", "Max Temp", "Max tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
-            createGauge("rad", "Rads", "Radation emited offsite", 0, 50, "rgba(255,   0,   240, 1 )");
-
+            createGauge("rad", "Rads", "Radation emited offsite", 0, 15, "rgba(255,   0,   240, 1 )");
         }
 
-        function createGauge(name, label, tooltip, min, max, trendColor) {
+        function createGauge(name, label, tooltip, min, max, trendColor, orange) {
 
             let guage_id = name + "GaugeContainer";
             let gaugeContainer = d3.select("#guages")
