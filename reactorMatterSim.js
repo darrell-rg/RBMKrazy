@@ -643,6 +643,9 @@ function afterRenderHandler() {
 
     let prev_stats = stats;
     stats = get_stats();
+    
+    //Keff can be expanded with inverse log 
+    // k = 1/Math.log(Keff)
     let new_Keff = 1.0;
     if (prev_stats.neutron_count > 0){
         new_Keff = stats.neutron_count / prev_stats.neutron_count;

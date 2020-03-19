@@ -415,16 +415,16 @@
 
 
         function createGauges() {
-            createGauge("Keff", "Keff", "Keffective how fast N population is growing", 0.995, 1.005, "rgba(  0,   123, 255, 1 )");
-            createGauge("neutron_count", "N Flux", "Watch this trend to avoid going supercritical!", 0, MAX_DRAWN_NEUTRONS, "rgba(  0,   0, 255, 1 )");
-            //createGauge("neutron_speed", "N Speed", "Slow neutrons increase the chance of fission", 0, NEUTRON_INITIAL_V, "rgba(  0,  33, 255, 1 )");
-            createGauge("power", "Power", "kw electrical power to grid", 0, 500, "rgba(1,   240,  1, 1 )");
-            createGauge("meanFuelTemp", "Mean Temp", "Avg tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
-            createGauge("maxFuelTemp", "Max Temp", "Max tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,   0,   0, 1 )");
-            createGauge("rad", "Rads", "Radation emited offsite", 0, 15, "rgba(255,   0,   240, 1 )");
+            createGauge("Keff", "Keff", "Keffective how fast N population is growing", 0.995, 1.005, "rgba(0,123,255,1)");
+            createGauge("neutron_count", "N Flux", "Watch this trend to avoid going supercritical!", 0, MAX_DRAWN_NEUTRONS, "rgba(0,0,255,1)");
+            //createGauge("neutron_speed", "N Speed", "Slow neutrons increase the chance of fission", 0, NEUTRON_INITIAL_V, "rgba(0,33,255,1)");
+            createGauge("power", "Power", "kw electrical power to grid", 0, 500, "rgba(1,240,1,1)");
+            createGauge("meanFuelTemp", "Mean Temp", "Avg tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,0,0,1)", [0.6,0.75]);
+            createGauge("maxFuelTemp", "Max Temp", "Max tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,0,0,1)");
+            createGauge("rad", "Rads", "Radation emited offsite", 0, 15, "rgba(255,0,240,1)", [0.5,0.8]);
         }
 
-        function createGauge(name, label, tooltip, min, max, trendColor, orange) {
+        function createGauge(name, label, tooltip, min, max, trendColor, zones = [.75,.9] ) {
 
             let guage_id = name + "GaugeContainer";
             let gaugeContainer = d3.select("#guages")
@@ -448,8 +448,15 @@
             }
 
             let range = config.max - config.min;
-            config.yellowZones = [{ from: config.min + range * 0.75, to: config.min + range * 0.9 }];
-            config.redZones = [{ from: config.min + range * 0.9, to: config.max }];
+            config.yellowZones = [{ from: config.min + range * zones[0], to: config.min + range * zones[1] }];
+            config.redZones = [{ from: config.min + range * zones[1], to: config.max }];
+
+            if(label == 'Keff')
+                config.greenZones = [{ from: 0.999, to:1.001 }];
+            
+            // if(label == 'Rads')
+                // config.greenZones = [{ from: 0, to:3 }];
+
             config.trendColor = trendColor;
             gauges[name] = new Gauge(guage_id, config);
             gauges[name].render();
