@@ -44,9 +44,9 @@ tempCanvas.height = FUEL_SIZE * 4;
 
 
 let heatCanvas = document.getElementById("heatMapCanvas");
-let heatContext = tempCanvas.getContext("2d", { alpha: false });  //,{ alpha: false } is supposed to be faster but actually seems slower
-tempCanvas.width = FUEL_SIZE * 5;
-tempCanvas.height = FUEL_SIZE * 5;
+let heatContext = heatCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
+heatCanvas.width = FUEL_SIZE * 5.5;
+heatCanvas.height = FUEL_SIZE * 5;
 
 
 let trendCanvas = document.getElementById("trendCanvas");
@@ -593,7 +593,9 @@ function beforeRenderHandler() {
 
     //clear the main canvas
     context.clearRect(0, 0, WIDTH, HEIGHT);
-
+    heatContext.fillStyle = "rgba(0,0,0,0.1 )";
+    heatContext.filter = 'blur(4px)';
+    heatContext.fillRect(0,0,300,3000);
     //draw heat circles behind fuel
     state.fuels.forEach(function (fuel_rod) {
         let r = (FUEL_SIZE / 2) + 4;
@@ -616,6 +618,28 @@ function beforeRenderHandler() {
         context.arc(x, y, r, 0, 2 * Math.PI);
         context.fillStyle = "rgba(" + fill_color + a + ")";
         context.fill();
+
+        //draw heatmap 
+        //let heatScale = 250.0/WIDTH;
+        let heatScale = 250.0/HEIGHT;
+
+        // Create gradient
+        r=r*heatScale;
+        x=x*heatScale;
+        y=y*heatScale;
+        
+        //reateRadialGradient(x,y,r,x1,y1,r1) - creates a radial/circular gradient
+        let grd = heatContext.createRadialGradient(x, y, r/4, x, y, r*1.5);
+        //let color = d3.interpolateInferno(fuel_rod.plugin.temperature / FUEL_EXPLODE_TEMP);
+        //grd.addColorStop(0, color+"FF");
+        grd.addColorStop(0, "rgba( 255, 0, 0, " + a + ")");
+        grd.addColorStop(1, "rgba( 0,0,200,"+ a/6 + ")");
+        heatContext.beginPath();
+        // Fill with gradient
+        heatContext.fillStyle = grd;
+        heatContext.arc(x, y, r*1.5, 0, 2 * Math.PI);
+        //heatContext.fillStyle = "rgba(" + fill_color + a + ")";
+        heatContext.fill();
     });
 
     t0 = performance.now();

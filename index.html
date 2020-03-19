@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html>
+<html lang="en"> 
+
 
 <head>
     <meta charset="utf-8">
@@ -16,7 +17,6 @@
         #rightSidebar {
             float: right;
             position: fixed;
-            top: 10;
             right: 0;
             /* width: 300px; */
             border: 2px solid #73AD21;
@@ -59,6 +59,18 @@
             right: 0;
             /* background-color: black; */
         }
+
+
+        #heatMapCanvas {
+            padding: 0px;
+            margin: 0px;
+            border: 1px solid #EEE;
+            z-index: 1;
+            top: 0;
+            right: 0;
+            /* background-color: black; */
+        }
+
 
         /* The slider itself */
         .slider {
@@ -205,13 +217,13 @@
         }
 
         .footer {
-            float: inline-end;
+            float: none;
         }
     </style>
 
-    <script src="vendor/d3.v5.min.js" charset="utf-8"></script>
-    <script src="vendor/matter.js" charset="utf-8"></script>
-    <script src="guages.js" charset="utf-8"></script>
+    <script src="vendor/d3.v5.min.js"></script>
+    <script src="vendor/matter.alpha.js"></script>
+    <script src="guages.js"></script>
 
 </head>
 
@@ -258,7 +270,6 @@
             <li>Beware of NRC emissions limits, earthquakes, and of course, meltdowns.</li>
         </ul>
 
-        </p>
 
         <div class="footer" style="font-size:x-small">
             <p id="note1">[1] This reactor simuation is not very accurate, for a more realistic simuation see
@@ -328,7 +339,7 @@
 
     <ol id="fuelList"></ol>
 
-    <script src="reactorMatterSim.js" charset="utf-8"></script>
+    <script src="reactorMatterSim.js" ></script>
 
     <script>
         let gauges = [];
