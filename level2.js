@@ -1,7 +1,6 @@
-"use strict";
 
 //restart the world with new random init
-function initStacks() {
+export function initStacks() {
     Matter.World.clear(engine.world);
 
     state = getEmptyState();
@@ -101,4 +100,4 @@ function initStacks() {
 
     //re add mouse since we deleted everything
     Matter.World.add(engine.world, mouseConstraint);
-}
+};

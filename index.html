@@ -356,7 +356,8 @@
 
     <ol id="fuelList"></ol>
 
-    <script src="reactorMatterSim.js"></script>
+    <script src="reactorSim.js"></script>
+    <script src="level1.js"></script>
 
 
 
@@ -398,13 +399,22 @@
             stopSim();
             let levelToLoad = document.getElementById("levelSelect").options[document.getElementById("levelSelect").selectedIndex].value;
 
-            import('./' + levelToLoad + '.js')
-                .then((level) => {
-                    //dynamic import does not work in Safari
-                    level.initStacks();
-                    trendPlot.clearTrend();
-                    hideModals();
-                });
+
+            if (levelToLoad == 'level1') {
+                initStacks();
+                trendPlot.clearTrend();
+                hideModals();
+
+            } else {
+
+                import('./' + levelToLoad + '.js')
+                    .then((level) => {
+                        //dynamic import does not work in Safari
+                        level.initStacks();
+                        trendPlot.clearTrend();
+                        hideModals();
+                    });
+            }
 
         }
 

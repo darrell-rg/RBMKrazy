@@ -283,6 +283,7 @@ function getEmptyState() {
         , coolent_temperature_out: 20
         , startTime: new Date()
         , money: 0
+        , goal_description: "Make $1000"
     }
     return state;
 }
