@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 
 
 <head>
@@ -219,18 +219,35 @@
         .footer {
             float: none;
         }
+
+        .odometer {
+            font-size: 20px;
+        }
     </style>
+    <link rel="stylesheet" href="vendor/odometer-theme-car.css" />
 
     <script src="vendor/d3.v5.min.js"></script>
     <script src="vendor/matter.alpha.js"></script>
     <script src="guages.js"></script>
+
+    <script>
+        window.odometerOptions = {
+            auto: true, // Don't automatically initialize everything with class 'odometer'
+            format: '(,ddd)', // Change how digit groups are formatted, and how many digits are shown after the decimal point
+            duration: 500, // Change how long the javascript expects the CSS animation to take
+            theme: 'car', // Specify the theme (if you have more than one theme css file on the page)
+            //animation: 'count' // Count is a simpler animation method which just increments the value, use it when you're looking for something more subtle.
+        };
+    </script>
+    <script src="vendor/odometer.js"></script>
 
 </head>
 
 <body onload="initializeGuages()">
     <canvas id="gameCanvas" width="800" height="700"></canvas>
     <div id="rightSidebar">
-
+        <span id="pl"> Profit/Loss:</span>
+        <div id="money" class="odometer">0</div>
         <div id="guages"></div>
         <div id="thermo"></div>
         <canvas id="trendCanvas" width="250" height="250"></canvas>
@@ -339,7 +356,9 @@
 
     <ol id="fuelList"></ol>
 
-    <script src="reactorMatterSim.js" ></script>
+    <script src="reactorMatterSim.js"></script>
+
+
 
     <script>
         let gauges = [];
@@ -381,11 +400,10 @@
 
             import('./' + levelToLoad + '.js')
                 .then((level) => {
-                    // Do something with the module.
+                    //dynamic import does not work in Safari
                     level.initStacks();
                     trendPlot.clearTrend();
                     hideModals();
-
                 });
 
         }
@@ -395,9 +413,20 @@
             createGauges();
             let guage_fps = 4;
             setInterval(updateGauges, 1000 / guage_fps);
+            setInterval(updateMoney, 1000);
             trendPlot = new TrendPlot(trendContext, {}), guage_fps;
             trendPlot.clearTrend();
         }
+
+
+        function updateMoney() {
+            if (state.money < 0)
+                document.getElementById("pl").innerHTML = "Loss: $";
+            else
+                document.getElementById("pl").innerHTML = "Profit: $";
+            document.getElementById("money").innerHTML = Math.abs(state.money);
+        }
+
 
         function updateGauges() {
             trendPlot.advanceTrend();
@@ -409,17 +438,12 @@
                 let c = gauges[key].config.trendColor;
                 trendPlot.plotTrend(value, label, c);
             }
-
         }
 
         function scaleValue(gauge, rawValue) {
             let overflow = 0; //10;\
-            let range = Math.abs(gauge.config.min-gauge.config.max)
-            let scaleValue = (rawValue - gauge.config.min ) / range;
-            // if (scaleValue < 0)
-            //     scaleValue = 0;
-            // if (scaleValue > 1)
-            //     scaleValue = 1;
+            let range = Math.abs(gauge.config.min - gauge.config.max)
+            let scaleValue = (rawValue - gauge.config.min) / range;
 
             return scaleValue; b
         }
@@ -430,12 +454,12 @@
             createGauge("neutron_count", "N Flux", "Watch this trend to avoid going supercritical!", 0, MAX_DRAWN_NEUTRONS, "rgba(0,0,255,1)");
             //createGauge("neutron_speed", "N Speed", "Slow neutrons increase the chance of fission", 0, NEUTRON_INITIAL_V, "rgba(0,33,255,1)");
             createGauge("power", "Power", "kw electrical power to grid", 0, 500, "rgba(1,240,1,1)");
-            createGauge("meanFuelTemp", "Mean Temp", "Avg tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,0,0,1)", [0.6,0.75]);
+            createGauge("meanFuelTemp", "Mean Temp", "Avg tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,0,0,1)", [0.6, 0.75]);
             createGauge("maxFuelTemp", "Max Temp", "Max tempreture of fuel elements", 0, FUEL_EXPLODE_TEMP, "rgba(255,0,0,1)");
-            createGauge("rad", "Rads", "Radation emited offsite", 0, 15, "rgba(255,0,240,1)", [0.5,0.8]);
+            createGauge("rad", "Rads", "Radation emited offsite", 0, 30, "rgba(255,0,240,1)", [0.5, 0.8]);
         }
 
-        function createGauge(name, label, tooltip, min, max, trendColor, zones = [.75,.9] ) {
+        function createGauge(name, label, tooltip, min, max, trendColor, zones = [.75, .9]) {
 
             let guage_id = name + "GaugeContainer";
             let gaugeContainer = d3.select("#guages")
@@ -462,11 +486,11 @@
             config.yellowZones = [{ from: config.min + range * zones[0], to: config.min + range * zones[1] }];
             config.redZones = [{ from: config.min + range * zones[1], to: config.max }];
 
-            if(label == 'Keff')
-                config.greenZones = [{ from: 0.999, to:1.001 }];
-            
+            if (label == 'Keff')
+                config.greenZones = [{ from: 0.999, to: 1.001 }];
+
             // if(label == 'Rads')
-                // config.greenZones = [{ from: 0, to:3 }];
+            // config.greenZones = [{ from: 0, to:3 }];
 
             config.trendColor = trendColor;
             gauges[name] = new Gauge(guage_id, config);

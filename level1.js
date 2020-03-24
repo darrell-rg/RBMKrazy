@@ -7,7 +7,7 @@ export function initStacks() {
 
     let reactor_left_wall = FUEL_SIZE * 4;
     let drop_height = 450;
-    let reactor_width = FUEL_SIZE * 10.2;
+    let reactor_width = FUEL_SIZE * 9.2;
     let reactor_center = reactor_left_wall + reactor_width / 2;
 
     let poison_stack = Matter.Composites.stack(800 + reactor_left_wall, HEIGHT - drop_height, 1, 10, 0, 0, function (x, y) {
@@ -54,7 +54,7 @@ export function initStacks() {
     });
 
 
-    let rand_stack = Matter.Composites.stack(reactor_left_wall + FUEL_SIZE * 2, HEIGHT - drop_height + 50, 6, 6, 0, 0, function (x, y) {
+    let rand_stack = Matter.Composites.stack(reactor_left_wall + FUEL_SIZE * 2, HEIGHT - drop_height + 50, 5, 5, 0, 0, function (x, y) {
         let rnd = Math.random();
         if (rnd < 0.25) {
             let m = make_moderator(x, y);

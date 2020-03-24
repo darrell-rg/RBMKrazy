@@ -6,7 +6,7 @@ This is the main code for the simulation and rendering
 let FPS = 60;
 
 let WALL_THICKNESS = 5;
-let FUEL_SIZE = 50;
+let FUEL_SIZE = 60;
 let WALL_CATAGORY = 0x0001;
 let FUEL_FRICTION = 0.2; //defaut 0.1
 let FUEL_DENSITY = 0.0001; //default 0.001 
@@ -14,7 +14,7 @@ let FUEL_RESTITUTION = 0.8; //default 0
 let FUEL_FRICTION_STATIC = 40.5//defult 0.5;
 let FUEL_CATAGORY = Matter.Body.nextCategory();
 let NEUTRON_CATAGORY = Matter.Body.nextCategory();
-let SPRITE_SCALE = 0.48;  //size to draw element sprite
+let SPRITE_SCALE = 0.56;  //size to draw element sprite
 
 let NEUTRON_INITIAL_V = 15; //how fast nutrons move
 let NEUTRON_INITIAL_R = 2; //larger value makes neutrons live longer
@@ -30,7 +30,8 @@ let POWER_SCALE = 8 * FPS;
 let U_SPECIFIC_HEAT = 116; //J/(kg K)
 let U_THERMAL_CONDUCTIVITY = 116; //W/(m K)
 let HEAT_TRANSFER_COEFFICIENT = 2e-6 / FPS; //increase this to make cooling more effective
-
+let PLANT_POWER_USE = 50; //how much power consumed by the plant
+let PRICE_PER_KWH = 0.1;  //price to sell or buy power
 
 let canvas = document.getElementById("gameCanvas");
 let context = canvas.getContext("2d");
@@ -45,14 +46,14 @@ tempCanvas.height = FUEL_SIZE * 4;
 
 let heatCanvas = document.getElementById("heatMapCanvas");
 let heatContext = heatCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
-heatCanvas.width = FUEL_SIZE * 5.5;
-heatCanvas.height = FUEL_SIZE * 5;
+heatCanvas.width = 275;//FUEL_SIZE * 5;
+heatCanvas.height = 175;
 
 
 let trendCanvas = document.getElementById("trendCanvas");
 let trendContext = trendCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
-trendCanvas.width = FUEL_SIZE * 5.5;
-trendCanvas.height = FUEL_SIZE * 5;
+trendCanvas.width = 275;//FUEL_SIZE * 5.5;
+trendCanvas.height = 250;//FUEL_SIZE * 5;
 
 //diagnostic info
 let frame_number = 0;
@@ -243,7 +244,7 @@ function make_poison(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) {
         },
         plugin: {
             r: FUEL_SIZE / 2,
-            crossSection: 0.02 * CROSSSECTION_SCALE,
+            crossSection: 0.09 * CROSSSECTION_SCALE,
             temperature: 20,
             spontaneousFisionRate: 0,
         }
@@ -281,6 +282,7 @@ function getEmptyState() {
         , coolent_temperature_in: 20
         , coolent_temperature_out: 20
         , startTime: new Date()
+        , money: 0
     }
     return state;
 }
@@ -355,8 +357,8 @@ function shouldSplit(neutron) {
             return false;
         }
         //roll for fision
-        //let doplar_reduction = ((1000 - fuel_rod.plugin.temperature) / 1000);
-        let doplar_reduction = 1;
+        let doplar_reduction = ((5000 - fuel_rod.plugin.temperature) / 5000); //make this number bigger to reduce effect of doplar_reduction
+        //let doplar_reduction = 1;
         if (inRange(neutron, fuel_rod) && Math.random() < fuel_rod.plugin.crossSection * doplar_reduction) {
             return fuel_rod;
         }
@@ -387,7 +389,7 @@ function tick_neutrons(neutrons) {
     let deaths = 0;
     let births = 0;
     let new_rads = 0;
-    let new_power = 0;
+    let new_power = -1*PLANT_POWER_USE;
     let new_speed = 1;
     let mcp_speed = mcp_slider.value / 100.0;
 
@@ -585,6 +587,7 @@ function get_stats() {
     {
         stats.neutron_count = 0
     }
+
     return stats;
 }
 
@@ -621,7 +624,7 @@ function beforeRenderHandler() {
 
         //draw heatmap 
         //let heatScale = 250.0/WIDTH;
-        let heatScale = 250.0/HEIGHT;
+        let heatScale = 175.0/HEIGHT;
 
         // Create gradient
         r=r*heatScale;
@@ -665,6 +668,8 @@ function afterRenderHandler() {
     t1 = performance.now();
     avg_draw_time = ((avg_draw_time * 29) + (t1 - t0)) / 30.0;
 
+    state.money = state.money + (state.avg_power * (PRICE_PER_KWH/FPS));
+
     let prev_stats = stats;
     stats = get_stats();
     
@@ -688,7 +693,7 @@ function afterRenderHandler() {
     document.getElementById("power" + "GaugeContainer").dataset.value = state.avg_power;
     document.getElementById("rad" + "GaugeContainer").dataset.value = state.avg_rads;
     document.getElementById("Keff" + "GaugeContainer").dataset.value = Keff;
-
+    
 
     document.getElementById("perf").innerHTML = "Elapsed: " + elapsed.toPrecision(5).substr(0,6) + " s"
         + "<br> simulating: " + state.curently_alive.toPrecision(5).substr(0,6) + " N"
@@ -701,10 +706,10 @@ function afterRenderHandler() {
 
 
 function checkGameOver() {
-    if (state.avg_rads > 15) {
+    if (state.avg_rads > 30) {
         showGameOver("Too many rads emmited offsite. The NRC shut you down!<br> You did not get a very favorable review in the IAEA report...");
     }
-    if (stats.mean_fuel_temp > 800) {
+    if (stats.mean_fuel_temp > 900) {
         showGameOver("A meltdown ‽  How did you possibly manage to melt down an RBMK reactor? <br> Now this browser tab won't be usable for 1000 years!");
     }
 }
