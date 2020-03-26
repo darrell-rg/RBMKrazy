@@ -244,7 +244,7 @@ function make_poison(x, y, width = FUEL_SIZE, height = FUEL_SIZE, angle = 0) {
         },
         plugin: {
             r: FUEL_SIZE / 2,
-            crossSection: 0.09 * CROSSSECTION_SCALE,
+            crossSection: 0.15 * CROSSSECTION_SCALE,
             temperature: 20,
             spontaneousFisionRate: 0,
         }
