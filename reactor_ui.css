@@ -4,79 +4,80 @@ body {
     color: bisque;
     background-color: #000;
     font-family: sans-serif;
+    padding: 0;
+    margin: 0;
 }
 
 #instrumentBar {
     position: fixed;
-    right: 0;
-    /* width: 300px; */
-    width: 99%;
-    border: 2px solid #73AD21;
-    z-index: 0;
-    padding: 2px;
-    margin: 4px;
+    left: 1;
+    top:0; 
+    /*width: 99vw;*/
+    border: 1px solid #555;
+    z-index: 1;
     color: azure;
-    text-align: right;
+    display: flex;
+    /* justify-content: center; */
+    height: 252px;
+    background-color: #111;
+}
+
+#guages {
+    order: 1;
+    flex-grow: 1;
+    max-width: 270px;
+    border: 1px solid #555;
+    text-align: center;
+}
+
+
+#trend {
+    order: 2;
+    border: 1px solid #555;
+    flex-grow: 1;
+    height: 250px;
+    width: 25vw;
+    background-color: #fff;
+}
+
+#thermalCam {
+    order: 3;
+    border: 1px solid #555;
+    flex-grow: 1;
+}
+
+#controls {
+    order: 4;
+    border: 1px solid #555;
+    flex-grow: 1;
+    max-width: 255px;
+}
+
+
+#winCond {
+    font-size: smaller;
+}
+
+
+#trendCanvas {
+    height: auto;
+    background-color: #fff;
+}
+
+#heatMapCanvas {
+    height: 200px;
+    /* background-color: black; */
 }
 
 
 #goal {
-    
+    text-align: right;
     display: block;
     max-width: 270px;
     top: 0px;
     left: 0px;
     overflow: hidden;
 }
-
-#guages {
-    float:left;
-    /* display: inline-block; */
-    max-width: 270px;
-    top: 0px;
-    left: 0px;
-}
-
-#controls {
-    float:right;
-    /* display: inline-block; */
-    bottom: 0px;
-    left: 0px;
-}
-
-
-#thermalCam {
-    float:left;
-    /* display: inline-block; */
-    bottom: 0px;
-    left: 0px;
-
-    z-index: 1;
-}
-
-
-#trendCanvas {
-    float:left;
-    padding: 0px;
-    margin: 0px;
-    border: 1px solid #EEE;
-    z-index: 1;
-    top: 0;
-    right: 0;
-    /* background-color: black; */
-}
-
-#heatMapCanvas {
-    float:left;
-    padding: 0px;
-    margin: 0px;
-    border: 1px solid #EEE;
-    z-index: 1;
-    top: 0;
-    right: 0;
-    /* background-color: black; */
-}
-
 
 .guage {
     float: left;
@@ -153,8 +154,8 @@ body {
     position: fixed;
     margin: 10px;
     padding: 10px;
-    bottom: 10%;
-    left: 10%;
+    bottom: 20%;
+    left: 20%;
     opacity: 0.95;
     width: auto;
     max-width: 60%;

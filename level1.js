@@ -7,9 +7,18 @@ function initStacks() {
     state = getEmptyState();
 
     let reactor_left_wall = FUEL_SIZE * 4;
-    let drop_height = 450;
+    
     let reactor_width = FUEL_SIZE * 9.2;
-    let reactor_center = reactor_left_wall + reactor_width / 2;
+    let reactor_height = FUEL_SIZE * 10.2;
+    let reactor_center_x = reactor_left_wall + reactor_width / 2;
+
+
+    state.core_center_x = reactor_center_x; 
+    state.core_center_y = HEIGHT - (reactor_height/2)-FUEL_SIZE; 
+    state.core_width =  reactor_width;
+    state.core_height = reactor_height;
+
+    let drop_height = 500;
 
     let poison_stack = Matter.Composites.stack(800 + reactor_left_wall, HEIGHT - drop_height, 1, 10, 0, 0, function (x, y) {
         let m = make_poison(x, y);
@@ -47,7 +56,7 @@ function initStacks() {
     //     core_materials.push(m);
     //     return m;
     // });
-    let reflector_bottom = Matter.Composites.stack(reactor_left_wall, HEIGHT - 40, 10, 1, 0, 0, function (x, y) {
+    let reflector_bottom = Matter.Composites.stack(reactor_left_wall, HEIGHT - 100, 10, 1, 0, 0, function (x, y) {
         let m = make_reflector(x, y);
         state.reflectors.push(m);
         state.core_materials.push(m);
@@ -94,8 +103,10 @@ function initStacks() {
         wall(WIDTH / 2, 0, WIDTH, WALL_THICKNESS),   // top
         wall(WIDTH / 2, HEIGHT, WIDTH, WALL_THICKNESS), // bottom
         wall(0, HEIGHT / 2, WALL_THICKNESS, HEIGHT),   // left edge
-        wall(reactor_left_wall, HEIGHT, WALL_THICKNESS, HEIGHT),  // reactor right
-        wall(reactor_width + reactor_left_wall, HEIGHT, WALL_THICKNESS, HEIGHT),   // reactor left wall
+
+        wall(reactor_center_x, HEIGHT - FUEL_SIZE, reactor_width,WALL_THICKNESS),   // reactor bottom wall
+        wall(reactor_left_wall, state.core_center_y, WALL_THICKNESS, reactor_height),  // reactor right
+        wall(reactor_width + reactor_left_wall, state.core_center_y, WALL_THICKNESS, reactor_height),   // reactor left wall
         wall(WIDTH, HEIGHT / 2, WALL_THICKNESS, HEIGHT), // right edge
     ]);
 

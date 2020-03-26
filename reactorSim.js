@@ -38,22 +38,14 @@ let context = canvas.getContext("2d");
 let HEIGHT = context.canvas.clientHeight;
 let WIDTH = context.canvas.clientWidth;
 
-let tempCanvas = document.getElementById("tempCanvas");
-let tempContext = tempCanvas.getContext("2d", { alpha: false });  //,{ alpha: false } is supposed to be faster but actually seems slower
-tempCanvas.width = FUEL_SIZE * 4;
-tempCanvas.height = FUEL_SIZE * 4;
-
-
-let heatCanvas = document.getElementById("heatMapCanvas");
-let heatContext = heatCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
-//heatCanvas.width = 275;//FUEL_SIZE * 5;
-//heatCanvas.height = 175;
-
 
 let trendCanvas = document.getElementById("trendCanvas");
 let trendContext = trendCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
-//trendCanvas.width = 275;//FUEL_SIZE * 5.5;
-trendCanvas.height = 250;//FUEL_SIZE * 5;
+
+let heatCanvas = document.getElementById("heatMapCanvas");
+let heatContext = heatCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
+
+
 
 //diagnostic info
 let frame_number = 0;
@@ -68,10 +60,22 @@ function resizeCanvas() {
     canvas.height = window.innerHeight;
     HEIGHT = context.canvas.clientHeight;
     WIDTH = context.canvas.clientWidth;
+    document.getElementById("instrumentBar").style.width = (window.innerWidth -2)+"px";
+    
+    trendCanvas.width = document.getElementById("trend").clientWidth;
+    trendCanvas.style.width = document.getElementById("trend").clientWidth +"px";
+
+
+    let v_scale = 200.0/window.innerHeight;
+    let w = Math.floor(window.innerWidth * v_scale);
+    
+    heatCanvas.style.width = +"px";
+    heatCanvas.width = w;
+
     // CONTEXT.lineWidth = PARAMETERS.LINE_WIDTH;
     // CONTEXT.strokeStyle = randomColor();
 }
-resizeCanvas();
+
 
 // engine
 let engine = Matter.Engine.create(
@@ -93,6 +97,7 @@ let render = Matter.Render.create({
         showDebug: false,
         showSleeping: false,
         showIds: false,
+        showMousePosition: false,
         background: '#000000'
     }
 });
@@ -284,6 +289,10 @@ function getEmptyState() {
         , startTime: new Date()
         , money: 0
         , goal_description: "Make $1000"
+        , core_center_x: 100
+        , core_center_y: 100
+        , core_height: 100
+        , core_width: 100
     }
     return state;
 }
@@ -546,6 +555,14 @@ function draw_neutrons(neutrons) {
 //not much faster then direct draw
 //TODO: try using imgdata 
 function draw_neutrons_fast(neutrons) {
+
+
+    //TODO:create temp canvas if it does not exist
+    let tempCanvas = document.getElementById("tempCanvas");
+    let tempContext = tempCanvas.getContext("2d", { alpha: false });  //,{ alpha: false } is supposed to be faster but actually seems slower
+    tempCanvas.width = FUEL_SIZE * 4;
+    tempCanvas.height = FUEL_SIZE * 4;
+
     tempContext.clearRect(0, 0, FUEL_SIZE / 4, FUEL_SIZE / 4);
     tempContext.fillStyle = "rgba(255, 220, 0, 0.5 )";
 
@@ -593,13 +610,63 @@ function get_stats() {
 }
 
 
+
+function updateThermalCam() {
+
+    heatContext.fillStyle = "rgba(0,0,50,0.1 )";
+    heatContext.filter = 'blur(2px)';
+    heatContext.fillRect(0,0,300,3000);
+
+    state.fuels.forEach(function (fuel_rod) {
+        let r = (FUEL_SIZE / 2) + 4;
+        let fill_color = "255, 0, 0,";
+        //fuel gets bigger and "explodes" if tempreture gets above a threshold
+        if (fuel_rod.plugin.temperature > FUEL_EXPLODE_TEMP && fuel_rod.area <= FUEL_SIZE * FUEL_SIZE) {
+            Matter.Body.scale(fuel_rod, 2, 2);
+            fill_color = "0, 0, 255,";
+            r = r * 3;
+        }
+        else if (fuel_rod.area > FUEL_SIZE * FUEL_SIZE) {
+            Matter.Body.scale(fuel_rod, 0.99, 0.99);
+            fill_color = "0, 0, 250,";
+            r = r * 1.5;
+        }
+        let x = fuel_rod.position.x,
+            y = fuel_rod.position.y,
+            a = fuel_rod.plugin.temperature / (FUEL_EXPLODE_TEMP * 0.8);
+
+        //draw heatmap 
+        //let heatScale = 250.0/WIDTH;
+        let heatScale = 200/HEIGHT;
+
+        // Create gradient
+        r=r*heatScale;
+        x=x*heatScale;
+        y=y*heatScale;
+        
+        //reateRadialGradient(x,y,r,x1,y1,r1) - creates a radial/circular gradient
+        let grd = heatContext.createRadialGradient(x, y, r/4, x, y, r*1.5);
+        let color = d3.interpolateInferno(fuel_rod.plugin.temperature / FUEL_EXPLODE_TEMP);
+        grd.addColorStop(0, color+"FF");
+        //grd.addColorStop(0, "rgba( 255, 0, 0, " + a + ")");
+        grd.addColorStop(1, "rgba( 0,0,200,"+ a/6 + ")");
+        heatContext.beginPath();
+        // Fill with gradient
+        heatContext.fillStyle = grd;
+        heatContext.arc(x, y, r*1.5, 0, 2 * Math.PI);
+        //heatContext.fillStyle = "rgba(" + fill_color + a + ")";
+        heatContext.fill();
+    });
+
+}
+
+
+
 function beforeRenderHandler() {
 
     //clear the main canvas
     context.clearRect(0, 0, WIDTH, HEIGHT);
-    heatContext.fillStyle = "rgba(0,0,0,0.1 )";
-    heatContext.filter = 'blur(4px)';
-    heatContext.fillRect(0,0,300,3000);
+
     //draw heat circles behind fuel
     state.fuels.forEach(function (fuel_rod) {
         let r = (FUEL_SIZE / 2) + 4;
@@ -623,34 +690,7 @@ function beforeRenderHandler() {
         context.fillStyle = "rgba(" + fill_color + a + ")";
         context.fill();
 
-        //draw heatmap 
-        //let heatScale = 250.0/WIDTH;
-        let heatScale = 175.0/HEIGHT;
-
-        // Create gradient
-        r=r*heatScale;
-        x=x*heatScale;
-        y=y*heatScale;
-        
-        //reateRadialGradient(x,y,r,x1,y1,r1) - creates a radial/circular gradient
-        let grd = heatContext.createRadialGradient(x, y, r/4, x, y, r*1.5);
-        //let color = d3.interpolateInferno(fuel_rod.plugin.temperature / FUEL_EXPLODE_TEMP);
-        //grd.addColorStop(0, color+"FF");
-        grd.addColorStop(0, "rgba( 255, 0, 0, " + a + ")");
-        grd.addColorStop(1, "rgba( 0,0,200,"+ a/6 + ")");
-        heatContext.beginPath();
-        // Fill with gradient
-        heatContext.fillStyle = grd;
-        heatContext.arc(x, y, r*1.5, 0, 2 * Math.PI);
-        //heatContext.fillStyle = "rgba(" + fill_color + a + ")";
-        heatContext.fill();
     });
-
-    // heatContext.filter = '';
-    // heatContext.strokeStyle = "#FFF";
-    // heatContext.fillStyle = "#FFF";
-    // heatContext.font = '12px serif';
-    // heatContext.fillText("Core Thermal Cam", 50, 40);
 
     t0 = performance.now();
 

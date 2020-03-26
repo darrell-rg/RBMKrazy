@@ -277,7 +277,7 @@ function TrendPlot(ctx, configuration, fps = 4) {
 		this.config = configuration;
 
 		this.config.padding = 5;
-		this.config.backgroundColor = '#EEE';
+		this.config.backgroundColor = '#fff';
 	}
 
 	this.advanceTrend = function () {
