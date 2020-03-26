@@ -28,18 +28,27 @@
 <body onload="initializeGuages()">
     <canvas id="gameCanvas" width="800" height="700"></canvas>
     <div id="instrumentBar">
-        <span id="pl"> Profit/Loss:</span>
-        <div id="money" class="odometer">0</div>
-        <div id="guages"></div>
+
+        <div id="guages">
+            <div id="goal">
+                <span id="pl"> Profit/Loss:</span>
+                <div id="money" class="odometer">0</div>
+            </div>
+        </div>
         <div id="thermo"></div>
         <canvas id="trendCanvas" width="250" height="250"></canvas>
-        <div class="slidecontainer">
-            <span class='sliderDisplay' id="mcp_display">MCP Speed: 50</span>
-            <input type="range" min="1" max="100" value="50" class="slider" id="mcp_speed">
+        <div id="thermalCam">
+            Thermal Cam:<br>
+            <canvas id="heatMapCanvas" width="275" height="200"></canvas>
         </div>
-        <canvas id="heatMapCanvas" width="250" height="250"></canvas>
-        <br>
-        <input type="button" value="Help" onclick="showHelp();">
+        <div id="controls">
+            <div class="slidecontainer">
+                <span class='sliderDisplay' id="mcp_display">MCP Speed: 50</span>
+                <input type="range" min="1" max="100" value="50" class="slider" id="mcp_speed">
+            </div>
+            <br>
+            <input type="button" value="Help" onclick="showHelp();">
+        </div>
 
     </div>
 

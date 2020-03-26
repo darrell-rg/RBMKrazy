@@ -10,20 +10,73 @@ body {
     position: fixed;
     right: 0;
     /* width: 300px; */
+    width: 99%;
     border: 2px solid #73AD21;
     z-index: 0;
     padding: 2px;
-    margin: 0px;
+    margin: 4px;
     color: azure;
     text-align: right;
 }
 
-#guages {
+
+#goal {
+    
     display: block;
     max-width: 270px;
     top: 0px;
     left: 0px;
+    overflow: hidden;
 }
+
+#guages {
+    float:left;
+    /* display: inline-block; */
+    max-width: 270px;
+    top: 0px;
+    left: 0px;
+}
+
+#controls {
+    float:right;
+    /* display: inline-block; */
+    bottom: 0px;
+    left: 0px;
+}
+
+
+#thermalCam {
+    float:left;
+    /* display: inline-block; */
+    bottom: 0px;
+    left: 0px;
+
+    z-index: 1;
+}
+
+
+#trendCanvas {
+    float:left;
+    padding: 0px;
+    margin: 0px;
+    border: 1px solid #EEE;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    /* background-color: black; */
+}
+
+#heatMapCanvas {
+    float:left;
+    padding: 0px;
+    margin: 0px;
+    border: 1px solid #EEE;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    /* background-color: black; */
+}
+
 
 .guage {
     float: left;
@@ -41,33 +94,12 @@ body {
     /* background-color: black; */
 }
 
-#trendCanvas {
-    padding: 0px;
-    margin: 0px;
-    border: 1px solid #EEE;
-    z-index: 1;
-    top: 0;
-    right: 0;
-    /* background-color: black; */
-}
-
-
-#heatMapCanvas {
-    padding: 0px;
-    margin: 0px;
-    border: 1px solid #EEE;
-    z-index: 1;
-    top: 0;
-    right: 0;
-    /* background-color: black; */
-}
-
 
 /* The slider itself */
 .slider {
     -webkit-appearance: none;
     /* Override default CSS styles */
-    width: 100%;
+    width: 250px;
     /* Full-width */
     height: 25px;
     /* Specified height */
@@ -121,7 +153,7 @@ body {
     position: fixed;
     margin: 10px;
     padding: 10px;
-    top: 10%;
+    bottom: 10%;
     left: 10%;
     opacity: 0.95;
     width: auto;

@@ -46,13 +46,13 @@ tempCanvas.height = FUEL_SIZE * 4;
 
 let heatCanvas = document.getElementById("heatMapCanvas");
 let heatContext = heatCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
-heatCanvas.width = 275;//FUEL_SIZE * 5;
-heatCanvas.height = 175;
+//heatCanvas.width = 275;//FUEL_SIZE * 5;
+//heatCanvas.height = 175;
 
 
 let trendCanvas = document.getElementById("trendCanvas");
 let trendContext = trendCanvas.getContext("2d");  //,{ alpha: false } is supposed to be faster but actually seems slower
-trendCanvas.width = 275;//FUEL_SIZE * 5.5;
+//trendCanvas.width = 275;//FUEL_SIZE * 5.5;
 trendCanvas.height = 250;//FUEL_SIZE * 5;
 
 //diagnostic info
@@ -645,6 +645,12 @@ function beforeRenderHandler() {
         //heatContext.fillStyle = "rgba(" + fill_color + a + ")";
         heatContext.fill();
     });
+
+    // heatContext.filter = '';
+    // heatContext.strokeStyle = "#FFF";
+    // heatContext.fillStyle = "#FFF";
+    // heatContext.font = '12px serif';
+    // heatContext.fillText("Core Thermal Cam", 50, 40);
 
     t0 = performance.now();
 
