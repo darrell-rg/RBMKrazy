@@ -53,22 +53,20 @@ let t0 = 1, t1 = 1;
 let avg_tick_time = 66.0;
 let avg_draw_time = 66.0;
 let avg_physics_time = 66.0;
-let Keff = 1.00;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     HEIGHT = context.canvas.clientHeight;
     WIDTH = context.canvas.clientWidth;
-    document.getElementById("instrumentBar").style.width = (window.innerWidth -2)+"px";
-    
+    document.getElementById("instrumentBar").style.width = (window.innerWidth - 2) + "px";
+
     trendCanvas.width = document.getElementById("trend").clientWidth;
-    trendCanvas.style.width = document.getElementById("trend").clientWidth +"px";
+    trendCanvas.style.width = document.getElementById("trend").clientWidth + "px";
 
-
-    let v_scale = 200.0/window.innerHeight;
+    let v_scale = 200.0 / window.innerHeight;
     let w = Math.floor(window.innerWidth * v_scale);
-    
+
     heatCanvas.style.width = +"px";
     heatCanvas.width = w;
 
@@ -270,7 +268,7 @@ function getRandNeutron(x, y, last_id = null) {
 
 
 //return a new empty simulation state object
-function getEmptyState() {
+function getInitialState() {
     let state = { //holds the current state of the game
         neutrons: []
         , fuels: []
@@ -278,8 +276,8 @@ function getEmptyState() {
         , reflectors: []
         , core_materials: []
         , poisons: []
-        , avg_rads: 1
-        , avg_power: 1
+        , rads: 1
+        , power: 1
         , avg_n_speed: 1
         , total_births: 1
         , total_deaths: 1
@@ -287,7 +285,6 @@ function getEmptyState() {
         , coolent_temperature_in: 20
         , coolent_temperature_out: 20
         , startTime: new Date()
-        , money: 0
         , goal_description: "Make $1000"
         , core_center_x: 100
         , core_center_y: 100
@@ -296,9 +293,21 @@ function getEmptyState() {
     }
     return state;
 }
+let state = getInitialState();
 
-
-let state = getEmptyState();
+function getInitialStats() {
+    return  {
+        neutron_count: 1,
+        mean_fuel_temp: 1,
+        max_fuel_temp: 1,
+        time: 1,
+        Keff: 1.00,
+        rads: 1.0,
+        power: 1.0,
+        money: 0.0
+    };
+}
+let stats = getInitialStats();
 
 
 function startSim() {
@@ -399,7 +408,7 @@ function tick_neutrons(neutrons) {
     let deaths = 0;
     let births = 0;
     let new_rads = 0;
-    let new_power = -1*PLANT_POWER_USE;
+    let new_power = -1 * PLANT_POWER_USE;
     let new_speed = 1;
     let mcp_speed = mcp_slider.value / 100.0;
 
@@ -516,12 +525,11 @@ function tick_neutrons(neutrons) {
         new_neutrons.length = MAX_SIMULATED_NEUTRONS;
     }
 
-
     state.total_births += births;
     state.total_deaths += deaths;
     state.curently_alive = state.total_births - state.total_deaths;
-    state.avg_rads = ((state.avg_rads * 29) + new_rads) / 30.0; //smooth rads
-    state.avg_power = ((state.avg_power * 9) + new_power) / 10.0; //smooth power
+    state.rads = new_rads;
+    state.power = new_power;
 
     if (new_neutrons.length > 0) {
         new_speed = (total_n_speed + 0.1) / new_neutrons.length;
@@ -576,13 +584,8 @@ function draw_neutrons_fast(neutrons) {
 }
 
 
-let stats = {
-    neutron_count: 1,
-    mean_fuel_temp: 1,
-    time: 1,
-}
+function get_stats(prev_stats) {
 
-function get_stats() {
     let sum = 0;//= fuels.reduce((previous, current) => current.plugin.temperature += previous);
 
     let max_temp = 0;
@@ -595,18 +598,41 @@ function get_stats() {
 
     let avg_temp = sum / state.fuels.length;
 
-    let stats = {
-        neutron_count: state.neutrons.length,
+    let neutron_count = state.neutrons.length;
+
+    //Keff can be expanded with inverse log 
+    // k = 1/Math.log(Keff)
+    let new_Keff = 1.0;
+    if (prev_stats.neutron_count > 0) {
+        new_Keff = neutron_count / prev_stats.neutron_count;
+    }
+    if (Math.abs(prev_stats.neutron_count - neutron_count) < 2) {
+        new_Keff = 1.0;
+    }
+    //Keff needs a lot of smoothing to be usefull
+    let Keff = ((prev_stats.Keff * 199.0) + new_Keff) / 200.0;
+
+
+    let avg_rads = ((prev_stats.rads * 29) + state.rads) / 30.0; //smooth rads
+    let avg_power = ((prev_stats.power * 9) + state.power) / 10.0; //smooth power
+
+    let money = prev_stats.money + (avg_power * (PRICE_PER_KWH / FPS));
+
+    let new_stats = {
+        neutron_count: neutron_count,
         mean_fuel_temp: avg_temp,
         max_fuel_temp: max_temp,
-        time: performance.now()
+        time: performance.now(),
+        Keff: Keff,
+        rads: avg_rads,
+        power: avg_power,
+        money: money
     }
-    if(!stats.neutron_count)
-    {
+    if (!new_stats.neutron_count) {
         stats.neutron_count = 0
     }
 
-    return stats;
+    return new_stats;
 }
 
 
@@ -615,7 +641,7 @@ function updateThermalCam() {
 
     heatContext.fillStyle = "rgba(0,0,50,0.1 )";
     heatContext.filter = 'blur(2px)';
-    heatContext.fillRect(0,0,300,3000);
+    heatContext.fillRect(0, 0, 300, 3000);
 
     state.fuels.forEach(function (fuel_rod) {
         let r = (FUEL_SIZE / 2) + 4;
@@ -637,23 +663,23 @@ function updateThermalCam() {
 
         //draw heatmap 
         //let heatScale = 250.0/WIDTH;
-        let heatScale = 200/HEIGHT;
+        let heatScale = 200 / HEIGHT;
 
         // Create gradient
-        r=r*heatScale;
-        x=x*heatScale;
-        y=y*heatScale;
-        
+        r = r * heatScale;
+        x = x * heatScale;
+        y = y * heatScale;
+
         //reateRadialGradient(x,y,r,x1,y1,r1) - creates a radial/circular gradient
-        let grd = heatContext.createRadialGradient(x, y, r/4, x, y, r*1.5);
+        let grd = heatContext.createRadialGradient(x, y, r / 4, x, y, r * 1.5);
         let color = d3.interpolateInferno(fuel_rod.plugin.temperature / FUEL_EXPLODE_TEMP);
-        grd.addColorStop(0, color+"FF");
+        grd.addColorStop(0, color + "FF");
         //grd.addColorStop(0, "rgba( 255, 0, 0, " + a + ")");
-        grd.addColorStop(1, "rgba( 0,0,200,"+ a/6 + ")");
+        grd.addColorStop(1, "rgba( 0,0,200," + a / 6 + ")");
         heatContext.beginPath();
         // Fill with gradient
         heatContext.fillStyle = grd;
-        heatContext.arc(x, y, r*1.5, 0, 2 * Math.PI);
+        heatContext.arc(x, y, r * 1.5, 0, 2 * Math.PI);
         //heatContext.fillStyle = "rgba(" + fill_color + a + ")";
         heatContext.fill();
     });
@@ -715,45 +741,27 @@ function afterRenderHandler() {
     t1 = performance.now();
     avg_draw_time = ((avg_draw_time * 29) + (t1 - t0)) / 30.0;
 
-    state.money = state.money + (state.avg_power * (PRICE_PER_KWH/FPS));
+    stats = get_stats(stats);
 
-    let prev_stats = stats;
-    stats = get_stats();
-    
-    //Keff can be expanded with inverse log 
-    // k = 1/Math.log(Keff)
-    let new_Keff = 1.0;
-    if (prev_stats.neutron_count > 0){
-        new_Keff = stats.neutron_count / prev_stats.neutron_count;
+    for (const [key, value] of Object.entries(stats)) {
+        let guageElement = document.getElementById(key + "GaugeContainer")
+        if (guageElement) {
+            guageElement.dataset.value = value;
+        }
     }
-    if (Math.abs(prev_stats.neutron_count -  stats.neutron_count) < 2){
-        new_Keff = 1.0;
-    }
-    //Keff needs a lot of smoothing to be usefull
-    Keff = ((Keff * 199.0) + new_Keff ) / 200.0;
 
-
-    document.getElementById("meanFuelTemp" + "GaugeContainer").dataset.value = stats.mean_fuel_temp;
-    document.getElementById("maxFuelTemp" + "GaugeContainer").dataset.value = stats.max_fuel_temp;
-    document.getElementById("neutron_count" + "GaugeContainer").dataset.value = stats.neutron_count;
-    //document.getElementById("neutron_speed" + "GaugeContainer").dataset.value = state.avg_n_speed;
-    document.getElementById("power" + "GaugeContainer").dataset.value = state.avg_power;
-    document.getElementById("rad" + "GaugeContainer").dataset.value = state.avg_rads;
-    document.getElementById("Keff" + "GaugeContainer").dataset.value = Keff;
-    
-
-    document.getElementById("perf").innerHTML = "Elapsed: " + elapsed.toPrecision(5).substr(0,6) + " s"
-        + "<br> simulating: " + state.curently_alive.toPrecision(5).substr(0,6) + " N"
-        + "<br> N tick time: " + avg_tick_time.toPrecision(5).substr(0,6) + "ms"
-        + "<br> N draw time: " + avg_draw_time.toPrecision(5).substr(0,6) + "ms"
-        + "<br>pyhsics tick+draw: " + avg_physics_time.toPrecision(5).substr(0,6) + "ms";
+    document.getElementById("perf").innerHTML = "Elapsed: " + elapsed.toPrecision(5).substr(0, 6) + " s"
+        + "<br> simulating: " + state.curently_alive.toPrecision(5).substr(0, 6) + " N"
+        + "<br> N tick time: " + avg_tick_time.toPrecision(5).substr(0, 6) + "ms"
+        + "<br> N draw time: " + avg_draw_time.toPrecision(5).substr(0, 6) + "ms"
+        + "<br>pyhsics tick+draw: " + avg_physics_time.toPrecision(5).substr(0, 6) + "ms";
     frame_number += 1;
     checkGameOver();
 }
 
 
 function checkGameOver() {
-    if (state.avg_rads > 30) {
+    if (stats.rads > 30) {
         showGameOver("Too many rads emmited offsite. The NRC shut you down!<br> You did not get a very favorable review in the IAEA report...");
     }
     if (stats.mean_fuel_temp > 900) {

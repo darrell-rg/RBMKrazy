@@ -4,7 +4,8 @@
 function initStacks() {
     Matter.World.clear(engine.world);
 
-    state = getEmptyState();
+    state = getInitialState();
+    stats = getInitialStats();
 
     let reactor_left_wall = FUEL_SIZE * 4;
     

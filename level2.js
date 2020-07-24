@@ -3,7 +3,7 @@
 export function initStacks() {
     Matter.World.clear(engine.world);
 
-    state = getEmptyState();
+    state = getInitialState();
 
     let reactor_left_wall = FUEL_SIZE * 4;
     let drop_height = 450;
