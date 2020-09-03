@@ -8,51 +8,34 @@ body {
     margin: 0;
 }
 
+.grid-container {
+    display: grid;
+    grid: 250px / auto auto auto auto;
+    grid-gap: 2px;
+    padding: 2px;
+    background-color: #555;
+}
+  
+.grid-container > div {
+    background-color: rgba(1, 1, 1, 0.8);
+    text-align: center;
+    padding: 0px 0;
+}
+
 #instrumentBar {
-    position: fixed;
-    left: 1;
-    top:0; 
-    /*width: 99vw;*/
-    border: 1px solid #555;
-    z-index: 1;
     color: azure;
-    display: flex;
-    /* justify-content: center; */
-    height: 252px;
-    background-color: #111;
 }
 
 #guages {
-    order: 1;
-    flex-grow: 1;
-    max-width: 270px;
-    border: 1px solid #555;
     text-align: center;
+    max-width: 270px;
 }
-
 
 #trend {
-    order: 2;
-    border: 1px solid #555;
-    flex-grow: 1;
-    height: 250px;
-    width: 25vw;
     background-color: #fff;
+    overflow: hidden;
+    max-width: 1000px;
 }
-
-#thermalCam {
-    order: 3;
-    border: 1px solid #555;
-    flex-grow: 1;
-}
-
-#controls {
-    order: 4;
-    border: 1px solid #555;
-    flex-grow: 1;
-    max-width: 255px;
-}
-
 
 #winCond {
     font-size: smaller;
@@ -69,20 +52,9 @@ body {
     /* background-color: black; */
 }
 
-
-#goal {
-    text-align: right;
-    display: block;
-    max-width: 270px;
-    top: 0px;
-    left: 0px;
-    overflow: hidden;
-}
-
 .guage {
     float: left;
 }
-
 
 #gameCanvas {
     padding: 0px;
@@ -90,11 +62,10 @@ body {
     margin: 0px;
     z-index: 0;
     position: fixed;
-    top: 0;
+    bottom: 0;
     right: 0;
     /* background-color: black; */
 }
-
 
 /* The slider itself */
 .slider {

@@ -25,25 +25,27 @@
 
 </head>
 
-<body onload="initializeGuages()" >
-    <canvas id="gameCanvas" width="800" height="700"></canvas>
-    <div id="instrumentBar">
+<body onload="initializeGuages()">
+    
+    <div id="instrumentBar" class="grid-container">
 
-        <div id="guages">
+        <div id="guage_container">
             <div id="goal">
                 <span id="pl"> Profit/Loss:</span>
                 <div id="money" class="odometer">0</div>
             </div>
+            <div id="guages"> </div>
+            <div id="winCond"> </div>
         </div>
 
         <div id="trend">
-            <canvas id="trendCanvas" height=250 ></canvas>
+            <canvas id="trendCanvas" height=250 width="1000"></canvas>
         </div>
 
 
         <div id="thermalCam">
             Thermal Cam:<br>
-            <canvas id="heatMapCanvas" height=200 ></canvas>
+            <canvas id="heatMapCanvas" height=200></canvas>
         </div>
 
         <div id="controls">
@@ -54,10 +56,9 @@
             <br>
             <input type="button" value="Help" onclick="showHelp();">
         </div>
-
     </div>
+    <canvas id="gameCanvas" ></canvas>
 
-    
 
     <div id="gameOver" class="modal" hidden>
         <h1>Game Over</h1>
@@ -209,7 +210,7 @@
 
         //onresize="setTimeout(resizeCanvas,1000);"
 
-        
+
         function initializeGuages() {
             //startup the guages
             createGauges();
@@ -221,6 +222,8 @@
             trendPlot.clearTrend();
 
         }
+
+
 
 
         function updateMoney() {
@@ -264,11 +267,11 @@
             //createGauge("neutron_speed", "N Speed", "Slow neutrons increase the chance of fission", 0, NEUTRON_INITIAL_V, "rgba(0,33,255,1)");
 
 
-            let gaugeContainer = d3.select("#guages")
-                .append("div")
-                .attr("id", "winCond");
+            // let gaugeContainer = d3.select("#guages")
+            //     .append("div")
+            //     .attr("id", "winCond");
 
-                document.getElementById("winCond").innerHTML =  "To win this level, earn $100,000";   
+            document.getElementById("winCond").innerHTML = "To win this level, earn $100,000";
         }
 
         function createGauge(name, label, tooltip, min, max, trendColor, zones = [.75, .9]) {

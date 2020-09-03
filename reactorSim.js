@@ -54,26 +54,37 @@ let avg_tick_time = 66.0;
 let avg_draw_time = 66.0;
 let avg_physics_time = 66.0;
 
+
+// look at https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
 function resizeCanvas() {
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.height = window.innerHeight-250;
     HEIGHT = context.canvas.clientHeight;
     WIDTH = context.canvas.clientWidth;
-    document.getElementById("instrumentBar").style.width = (window.innerWidth - 2) + "px";
-
+/*
     trendCanvas.width = document.getElementById("trend").clientWidth;
     trendCanvas.style.width = document.getElementById("trend").clientWidth + "px";
 
     let v_scale = 200.0 / window.innerHeight;
     let w = Math.floor(window.innerWidth * v_scale);
-
-    heatCanvas.style.width = +"px";
+    heatCanvas.style.width = w + "px";
     heatCanvas.width = w;
-
-    // CONTEXT.lineWidth = PARAMETERS.LINE_WIDTH;
-    // CONTEXT.strokeStyle = randomColor();
+*/
 }
 
+/*const divElem = document.querySelector('#instrumentBar > div');
+const resizeObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+        if (entry.target.id == 'trend') {
+            console.log("setting trend plot width");
+            console.log(entry);
+            trendCanvas.width = entry.contentRect.width;
+            trendCanvas.style.width = entry.contentRect.width + 'px';
+        }
+    }
+});
+resizeObserver.observe(document.querySelector('#trend'));
+*/
 
 // engine
 let engine = Matter.Engine.create(
@@ -296,7 +307,7 @@ function getInitialState() {
 let state = getInitialState();
 
 function getInitialStats() {
-    return  {
+    return {
         neutron_count: 1,
         mean_fuel_temp: 1,
         max_fuel_temp: 1,
